@@ -1,0 +1,1469 @@
+{
+  "flags": [],
+  "subcommands": {
+    "create": {
+      "flags": [
+        "--allow-missing-template-keys=true:",
+        "--dry-run='none':",
+        "--edit=false:",
+        "--field-manager='kubectl-create':",
+        "-f, --filename=[]:",
+        "-k, --kustomize='':",
+        "-o, --output='':",
+        "--raw='':",
+        "-R, --recursive=false:",
+        "--save-config=false:",
+        "-l, --selector='':",
+        "--show-managed-fields=false:",
+        "--template='':",
+        "--validate='strict':",
+        "--windows-line-endings=false:"
+      ],
+      "subcommands": {
+        "clusterrole": {
+          "flags": [
+            "--aggregation-rule=:",
+            "--allow-missing-template-keys=true:",
+            "--dry-run='none':",
+            "--field-manager='kubectl-create':",
+            "--non-resource-url=[]:",
+            "-o, --output='':",
+            "--resource=[]:",
+            "--resource-name=[]:",
+            "--save-config=false:",
+            "--show-managed-fields=false:",
+            "--template='':",
+            "--validate='strict':",
+            "--verb=[]:"
+          ],
+          "subcommands": {}
+        },
+        "clusterrolebinding": {
+          "flags": [
+            "--allow-missing-template-keys=true:",
+            "--clusterrole='':",
+            "--dry-run='none':",
+            "--field-manager='kubectl-create':",
+            "--group=[]:",
+            "-o, --output='':",
+            "--save-config=false:",
+            "--serviceaccount=[]:",
+            "--show-managed-fields=false:",
+            "--template='':",
+            "--user=[]:",
+            "--validate='strict':"
+          ],
+          "subcommands": {}
+        },
+        "configmap": {
+          "flags": [
+            "--allow-missing-template-keys=true:",
+            "--append-hash=false:",
+            "--dry-run='none':",
+            "--field-manager='kubectl-create':",
+            "--from-env-file=[]:",
+            "--from-file=[]:",
+            "--from-literal=[]:",
+            "-o, --output='':",
+            "--save-config=false:",
+            "--show-managed-fields=false:",
+            "--template='':",
+            "--validate='strict':"
+          ],
+          "subcommands": {}
+        },
+        "cronjob": {
+          "flags": [
+            "--allow-missing-template-keys=true:",
+            "--dry-run='none':",
+            "--field-manager='kubectl-create':",
+            "--image='':",
+            "-o, --output='':",
+            "--restart='':",
+            "--save-config=false:",
+            "--schedule='':",
+            "--show-managed-fields=false:",
+            "--template='':",
+            "--validate='strict':"
+          ],
+          "subcommands": {}
+        },
+        "deployment": {
+          "flags": [
+            "--allow-missing-template-keys=true:",
+            "--dry-run='none':",
+            "--field-manager='kubectl-create':",
+            "--image=[]:",
+            "-o, --output='':",
+            "--port=-1:",
+            "-r, --replicas=1:",
+            "--save-config=false:",
+            "--show-managed-fields=false:",
+            "--template='':",
+            "--validate='strict':"
+          ],
+          "subcommands": {}
+        },
+        "ingress": {
+          "flags": [
+            "--annotation ingress.annotation1=foo \\",
+            "--annotation ingress.annotation2=bla",
+            "--rule=\"foo.com/=svc:port\" \\",
+            "--rule=\"foo.com/admin/=svcadmin:portadmin\"",
+            "--rule=\"foo.com/path*=svc:8080\" \\",
+            "--rule=\"bar.com/admin*=svc2:http\"",
+            "--rule=\"foo.com/=svc:https,tls\" \\",
+            "--rule=\"foo.com/path/subpath*=othersvc:8080\"",
+            "--rule=\"foo.com/*=svc:8080,tls=secret1\"",
+            "--default-backend=defaultsvc:http \\",
+            "--rule=\"foo.com/*=svc:8080,tls=secret1\"",
+            "--allow-missing-template-keys=true:",
+            "--annotation=[]:",
+            "--class='':",
+            "--default-backend='':",
+            "--dry-run='none':",
+            "--field-manager='kubectl-create':",
+            "-o, --output='':",
+            "--rule=[]:",
+            "--save-config=false:",
+            "--show-managed-fields=false:",
+            "--template='':",
+            "--validate='strict':"
+          ],
+          "subcommands": {}
+        },
+        "job": {
+          "flags": [
+            "--allow-missing-template-keys=true:",
+            "--dry-run='none':",
+            "--field-manager='kubectl-create':",
+            "--from='':",
+            "--image='':",
+            "-o, --output='':",
+            "--save-config=false:",
+            "--show-managed-fields=false:",
+            "--template='':",
+            "--validate='strict':"
+          ],
+          "subcommands": {}
+        },
+        "namespace": {
+          "flags": [
+            "--allow-missing-template-keys=true:",
+            "--dry-run='none':",
+            "--field-manager='kubectl-create':",
+            "-o, --output='':",
+            "--save-config=false:",
+            "--show-managed-fields=false:",
+            "--template='':",
+            "--validate='strict':"
+          ],
+          "subcommands": {}
+        },
+        "poddisruptionbudget": {
+          "flags": [
+            "--allow-missing-template-keys=true:",
+            "--dry-run='none':",
+            "--field-manager='kubectl-create':",
+            "--max-unavailable='':",
+            "--min-available='':",
+            "-o, --output='':",
+            "--save-config=false:",
+            "--selector='':",
+            "--show-managed-fields=false:",
+            "--template='':",
+            "--validate='strict':"
+          ],
+          "subcommands": {}
+        },
+        "priorityclass": {
+          "flags": [
+            "--allow-missing-template-keys=true:",
+            "--description='':",
+            "--dry-run='none':",
+            "--field-manager='kubectl-create':",
+            "--global-default=false:",
+            "-o, --output='':",
+            "--preemption-policy='PreemptLowerPriority':",
+            "--save-config=false:",
+            "--show-managed-fields=false:",
+            "--template='':",
+            "--validate='strict':",
+            "--value=0:"
+          ],
+          "subcommands": {}
+        },
+        "quota": {
+          "flags": [
+            "--allow-missing-template-keys=true:",
+            "--dry-run='none':",
+            "--field-manager='kubectl-create':",
+            "--hard='':",
+            "-o, --output='':",
+            "--save-config=false:",
+            "--scopes='':",
+            "--show-managed-fields=false:",
+            "--template='':",
+            "--validate='strict':"
+          ],
+          "subcommands": {}
+        },
+        "role": {
+          "flags": [
+            "--allow-missing-template-keys=true:",
+            "--dry-run='none':",
+            "--field-manager='kubectl-create':",
+            "-o, --output='':",
+            "--resource=[]:",
+            "--resource-name=[]:",
+            "--save-config=false:",
+            "--show-managed-fields=false:",
+            "--template='':",
+            "--validate='strict':",
+            "--verb=[]:"
+          ],
+          "subcommands": {}
+        },
+        "rolebinding": {
+          "flags": [
+            "--allow-missing-template-keys=true:",
+            "--clusterrole='':",
+            "--dry-run='none':",
+            "--field-manager='kubectl-create':",
+            "--group=[]:",
+            "-o, --output='':",
+            "--role='':",
+            "--save-config=false:",
+            "--serviceaccount=[]:",
+            "--show-managed-fields=false:",
+            "--template='':",
+            "--user=[]:",
+            "--validate='strict':"
+          ],
+          "subcommands": {}
+        },
+        "secret": {
+          "flags": [],
+          "subcommands": {
+            "docker-registry": {
+              "flags": [
+                "--allow-missing-template-keys=true:",
+                "--append-hash=false:",
+                "--docker-email='':",
+                "--docker-password='':",
+                "--docker-server='https://index.docker.io/v1/':",
+                "--docker-username='':",
+                "--dry-run='none':",
+                "--field-manager='kubectl-create':",
+                "--from-file=[]:",
+                "-o, --output='':",
+                "--save-config=false:",
+                "--show-managed-fields=false:",
+                "--template='':",
+                "--validate='strict':"
+              ],
+              "subcommands": {}
+            },
+            "generic": {
+              "flags": [
+                "--allow-missing-template-keys=true:",
+                "--append-hash=false:",
+                "--dry-run='none':",
+                "--field-manager='kubectl-create':",
+                "--from-env-file=[]:",
+                "--from-file=[]:",
+                "--from-literal=[]:",
+                "-o, --output='':",
+                "--save-config=false:",
+                "--show-managed-fields=false:",
+                "--template='':",
+                "--type='':",
+                "--validate='strict':"
+              ],
+              "subcommands": {}
+            },
+            "tls": {
+              "flags": [
+                "--allow-missing-template-keys=true:",
+                "--append-hash=false:",
+                "--cert='':",
+                "--dry-run='none':",
+                "--field-manager='kubectl-create':",
+                "--key='':",
+                "-o, --output='':",
+                "--save-config=false:",
+                "--show-managed-fields=false:",
+                "--template='':",
+                "--validate='strict':"
+              ],
+              "subcommands": {}
+            }
+          }
+        },
+        "service": {
+          "flags": [],
+          "subcommands": {
+            "clusterip": {
+              "flags": [
+                "--allow-missing-template-keys=true:",
+                "--clusterip='':",
+                "--dry-run='none':",
+                "--field-manager='kubectl-create':",
+                "-o, --output='':",
+                "--save-config=false:",
+                "--show-managed-fields=false:",
+                "--tcp=[]:",
+                "--template='':",
+                "--validate='strict':"
+              ],
+              "subcommands": {}
+            },
+            "externalname": {
+              "flags": [
+                "--allow-missing-template-keys=true:",
+                "--dry-run='none':",
+                "--external-name='':",
+                "--field-manager='kubectl-create':",
+                "-o, --output='':",
+                "--save-config=false:",
+                "--show-managed-fields=false:",
+                "--tcp=[]:",
+                "--template='':",
+                "--validate='strict':"
+              ],
+              "subcommands": {}
+            },
+            "loadbalancer": {
+              "flags": [
+                "--allow-missing-template-keys=true:",
+                "--dry-run='none':",
+                "--field-manager='kubectl-create':",
+                "-o, --output='':",
+                "--save-config=false:",
+                "--show-managed-fields=false:",
+                "--tcp=[]:",
+                "--template='':",
+                "--validate='strict':"
+              ],
+              "subcommands": {}
+            },
+            "nodeport": {
+              "flags": [
+                "--allow-missing-template-keys=true:",
+                "--dry-run='none':",
+                "--field-manager='kubectl-create':",
+                "--node-port=0:",
+                "-o, --output='':",
+                "--save-config=false:",
+                "--show-managed-fields=false:",
+                "--tcp=[]:",
+                "--template='':",
+                "--validate='strict':"
+              ],
+              "subcommands": {}
+            }
+          }
+        },
+        "serviceaccount": {
+          "flags": [
+            "--allow-missing-template-keys=true:",
+            "--dry-run='none':",
+            "--field-manager='kubectl-create':",
+            "-o, --output='':",
+            "--save-config=false:",
+            "--show-managed-fields=false:",
+            "--template='':",
+            "--validate='strict':"
+          ],
+          "subcommands": {}
+        },
+        "token": {
+          "flags": [
+            "--allow-missing-template-keys=true:",
+            "--audience=[]:",
+            "--bound-object-kind='':",
+            "--bound-object-name='':",
+            "--bound-object-uid='':",
+            "--duration=0s:",
+            "-o, --output='':",
+            "--show-managed-fields=false:",
+            "--template='':"
+          ],
+          "subcommands": {}
+        }
+      }
+    },
+    "expose": {
+      "flags": [
+        "--allow-missing-template-keys=true:",
+        "--cluster-ip='':",
+        "--dry-run='none':",
+        "--external-ip='':",
+        "--field-manager='kubectl-expose':",
+        "-f, --filename=[]:",
+        "-k, --kustomize='':",
+        "-l, --labels='':",
+        "--load-balancer-ip='':",
+        "--name='':",
+        "-o, --output='':",
+        "--override-type='merge':",
+        "--overrides='':",
+        "--port='':",
+        "--protocol='':",
+        "-R, --recursive=false:",
+        "--save-config=false:",
+        "--selector='':",
+        "--session-affinity='':",
+        "--show-managed-fields=false:",
+        "--target-port='':",
+        "--template='':",
+        "--type='':"
+      ],
+      "subcommands": {}
+    },
+    "run": {
+      "flags": [
+        "--allow-missing-template-keys=true:",
+        "--annotations=[]:",
+        "--attach=false:",
+        "--cascade='background':",
+        "--command=false:",
+        "--dry-run='none':",
+        "--env=[]:",
+        "--expose=false:",
+        "--field-manager='kubectl-run':",
+        "-f, --filename=[]:",
+        "--force=false:",
+        "--grace-period=-1:",
+        "--image='':",
+        "--image-pull-policy='':",
+        "-k, --kustomize='':",
+        "-l, --labels='':",
+        "--leave-stdin-open=false:",
+        "-o, --output='':",
+        "--override-type='merge':",
+        "--overrides='':",
+        "--pod-running-timeout=1m0s:",
+        "--port='':",
+        "--privileged=false:",
+        "-q, --quiet=false:",
+        "-R, --recursive=false:",
+        "--restart='Always':",
+        "--rm=false:",
+        "--save-config=false:",
+        "--show-managed-fields=false:",
+        "-i, --stdin=false:",
+        "--template='':",
+        "--timeout=0s:",
+        "-t, --tty=false:",
+        "--wait=false:"
+      ],
+      "subcommands": {}
+    },
+    "set": {
+      "flags": [],
+      "subcommands": {
+        "env": {
+          "flags": [
+            "--all=false:",
+            "--allow-missing-template-keys=true:",
+            "-c, --containers='*':",
+            "--dry-run='none':",
+            "-e, --env=[]:",
+            "--field-manager='kubectl-set':",
+            "-f, --filename=[]:",
+            "--from='':",
+            "--keys=[]:",
+            "-k, --kustomize='':",
+            "--list=false:",
+            "--local=false:",
+            "-o, --output='':",
+            "--overwrite=true:",
+            "--prefix='':",
+            "-R, --recursive=false:",
+            "--resolve=false:",
+            "-l, --selector='':",
+            "--show-managed-fields=false:",
+            "--template='':"
+          ],
+          "subcommands": {}
+        },
+        "image": {
+          "flags": [
+            "--all=false:",
+            "--allow-missing-template-keys=true:",
+            "--dry-run='none':",
+            "--field-manager='kubectl-set':",
+            "-f, --filename=[]:",
+            "-k, --kustomize='':",
+            "--local=false:",
+            "-o, --output='':",
+            "-R, --recursive=false:",
+            "-l, --selector='':",
+            "--show-managed-fields=false:",
+            "--template='':"
+          ],
+          "subcommands": {}
+        },
+        "resources": {
+          "flags": [
+            "--all=false:",
+            "--allow-missing-template-keys=true:",
+            "-c, --containers='*':",
+            "--dry-run='none':",
+            "--field-manager='kubectl-set':",
+            "-f, --filename=[]:",
+            "-k, --kustomize='':",
+            "--limits='':",
+            "--local=false:",
+            "-o, --output='':",
+            "-R, --recursive=false:",
+            "--requests='':",
+            "-l, --selector='':",
+            "--show-managed-fields=false:",
+            "--template='':"
+          ],
+          "subcommands": {}
+        },
+        "selector": {
+          "flags": [
+            "--all=false:",
+            "--allow-missing-template-keys=true:",
+            "--dry-run='none':",
+            "--field-manager='kubectl-set':",
+            "-f, --filename=[]:",
+            "--local=false:",
+            "-o, --output='':",
+            "-R, --recursive=true:",
+            "--resource-version='':",
+            "--show-managed-fields=false:",
+            "--template='':"
+          ],
+          "subcommands": {}
+        },
+        "serviceaccount": {
+          "flags": [
+            "--all=false:",
+            "--allow-missing-template-keys=true:",
+            "--dry-run='none':",
+            "--field-manager='kubectl-set':",
+            "-f, --filename=[]:",
+            "-k, --kustomize='':",
+            "--local=false:",
+            "-o, --output='':",
+            "-R, --recursive=false:",
+            "--show-managed-fields=false:",
+            "--template='':"
+          ],
+          "subcommands": {}
+        },
+        "subject": {
+          "flags": [
+            "--all=false:",
+            "--allow-missing-template-keys=true:",
+            "--dry-run='none':",
+            "--field-manager='kubectl-set':",
+            "-f, --filename=[]:",
+            "--group=[]:",
+            "-k, --kustomize='':",
+            "--local=false:",
+            "-o, --output='':",
+            "-R, --recursive=false:",
+            "-l, --selector='':",
+            "--serviceaccount=[]:",
+            "--show-managed-fields=false:",
+            "--template='':",
+            "--user=[]:"
+          ],
+          "subcommands": {}
+        }
+      }
+    },
+    "explain": {
+      "flags": [
+        "--api-version='':",
+        "-o, --output='plaintext':",
+        "--recursive=false:"
+      ],
+      "subcommands": {}
+    },
+    "get": {
+      "flags": [
+        "-A, --all-namespaces=false:",
+        "--allow-missing-template-keys=true:",
+        "--chunk-size=500:",
+        "--field-selector='':",
+        "-f, --filename=[]:",
+        "--ignore-not-found=false:",
+        "-k, --kustomize='':",
+        "-L, --label-columns=[]:",
+        "--no-headers=false:",
+        "-o, --output='':",
+        "--output-watch-events=false:",
+        "--raw='':",
+        "-R, --recursive=false:",
+        "-l, --selector='':",
+        "--server-print=true:",
+        "--show-kind=false:",
+        "--show-labels=false:",
+        "--show-managed-fields=false:",
+        "--sort-by='':",
+        "--subresource='':",
+        "--template='':",
+        "-w, --watch=false:",
+        "--watch-only=false:"
+      ],
+      "subcommands": {}
+    },
+    "edit": {
+      "flags": [
+        "--allow-missing-template-keys=true:",
+        "--field-manager='kubectl-edit':",
+        "-f, --filename=[]:",
+        "-k, --kustomize='':",
+        "-o, --output='':",
+        "--output-patch=false:",
+        "-R, --recursive=false:",
+        "--save-config=false:",
+        "--show-managed-fields=false:",
+        "--subresource='':",
+        "--template='':",
+        "--validate='strict':",
+        "--windows-line-endings=false:"
+      ],
+      "subcommands": {}
+    },
+    "delete": {
+      "flags": [
+        "--all=false:",
+        "-A, --all-namespaces=false:",
+        "--cascade='background':",
+        "--dry-run='none':",
+        "--field-selector='':",
+        "-f, --filename=[]:",
+        "--force=false:",
+        "--grace-period=-1:",
+        "--ignore-not-found=false:",
+        "-i, --interactive=false:",
+        "-k, --kustomize='':",
+        "--now=false:",
+        "-o, --output='':",
+        "--raw='':",
+        "-R, --recursive=false:",
+        "-l, --selector='':",
+        "--timeout=0s:",
+        "--wait=true:"
+      ],
+      "subcommands": {}
+    },
+    "rollout": {
+      "flags": [],
+      "subcommands": {
+        "history": {
+          "flags": [
+            "--allow-missing-template-keys=true:",
+            "-f, --filename=[]:",
+            "-k, --kustomize='':",
+            "-o, --output='':",
+            "-R, --recursive=false:",
+            "--revision=0:",
+            "-l, --selector='':",
+            "--show-managed-fields=false:",
+            "--template='':"
+          ],
+          "subcommands": {}
+        },
+        "pause": {
+          "flags": [
+            "--allow-missing-template-keys=true:",
+            "--field-manager='kubectl-rollout':",
+            "-f, --filename=[]:",
+            "-k, --kustomize='':",
+            "-o, --output='':",
+            "-R, --recursive=false:",
+            "-l, --selector='':",
+            "--show-managed-fields=false:",
+            "--template='':"
+          ],
+          "subcommands": {}
+        },
+        "restart": {
+          "flags": [
+            "--allow-missing-template-keys=true:",
+            "--field-manager='kubectl-rollout':",
+            "-f, --filename=[]:",
+            "-k, --kustomize='':",
+            "-o, --output='':",
+            "-R, --recursive=false:",
+            "-l, --selector='':",
+            "--show-managed-fields=false:",
+            "--template='':"
+          ],
+          "subcommands": {}
+        },
+        "resume": {
+          "flags": [
+            "--allow-missing-template-keys=true:",
+            "--field-manager='kubectl-rollout':",
+            "-f, --filename=[]:",
+            "-k, --kustomize='':",
+            "-o, --output='':",
+            "-R, --recursive=false:",
+            "-l, --selector='':",
+            "--show-managed-fields=false:",
+            "--template='':"
+          ],
+          "subcommands": {}
+        },
+        "status": {
+          "flags": [
+            "-f, --filename=[]:",
+            "-k, --kustomize='':",
+            "-R, --recursive=false:",
+            "--revision=0:",
+            "-l, --selector='':",
+            "--timeout=0s:",
+            "-w, --watch=true:"
+          ],
+          "subcommands": {}
+        },
+        "undo": {
+          "flags": [
+            "--allow-missing-template-keys=true:",
+            "--dry-run='none':",
+            "-f, --filename=[]:",
+            "-k, --kustomize='':",
+            "-o, --output='':",
+            "-R, --recursive=false:",
+            "-l, --selector='':",
+            "--show-managed-fields=false:",
+            "--template='':",
+            "--to-revision=0:"
+          ],
+          "subcommands": {}
+        }
+      }
+    },
+    "scale": {
+      "flags": [
+        "--all=false:",
+        "--allow-missing-template-keys=true:",
+        "--current-replicas=-1:",
+        "--dry-run='none':",
+        "-f, --filename=[]:",
+        "-k, --kustomize='':",
+        "-o, --output='':",
+        "-R, --recursive=false:",
+        "--replicas=0:",
+        "--resource-version='':",
+        "-l, --selector='':",
+        "--show-managed-fields=false:",
+        "--template='':",
+        "--timeout=0s:"
+      ],
+      "subcommands": {}
+    },
+    "autoscale": {
+      "flags": [
+        "--allow-missing-template-keys=true:",
+        "--cpu='':",
+        "--dry-run='none':",
+        "--field-manager='kubectl-autoscale':",
+        "-f, --filename=[]:",
+        "-k, --kustomize='':",
+        "--max=-1:",
+        "--memory='':",
+        "--min=-1:",
+        "--name='':",
+        "-o, --output='':",
+        "-R, --recursive=false:",
+        "--save-config=false:",
+        "--show-managed-fields=false:",
+        "--template='':"
+      ],
+      "subcommands": {}
+    },
+    "certificate": {
+      "flags": [],
+      "subcommands": {
+        "approve": {
+          "flags": [
+            "--allow-missing-template-keys=true:",
+            "-f, --filename=[]:",
+            "--force=false:",
+            "-k, --kustomize='':",
+            "-o, --output='':",
+            "-R, --recursive=false:",
+            "--show-managed-fields=false:",
+            "--template='':"
+          ],
+          "subcommands": {}
+        },
+        "deny": {
+          "flags": [
+            "--allow-missing-template-keys=true:",
+            "-f, --filename=[]:",
+            "--force=false:",
+            "-k, --kustomize='':",
+            "-o, --output='':",
+            "-R, --recursive=false:",
+            "--show-managed-fields=false:",
+            "--template='':"
+          ],
+          "subcommands": {}
+        }
+      }
+    },
+    "cluster-info": {
+      "flags": [],
+      "subcommands": {
+        "dump": {
+          "flags": [
+            "-A, --all-namespaces=false:",
+            "--allow-missing-template-keys=true:",
+            "--namespaces=[]:",
+            "-o, --output='json':",
+            "--output-directory='':",
+            "--pod-running-timeout=20s:",
+            "--show-managed-fields=false:",
+            "--template='':"
+          ],
+          "subcommands": {}
+        }
+      }
+    },
+    "top": {
+      "flags": [],
+      "subcommands": {
+        "node": {
+          "flags": [
+            "--no-headers=false:",
+            "-l, --selector='':",
+            "--show-capacity=false:",
+            "--show-swap=false:",
+            "--sort-by='':",
+            "--use-protocol-buffers=true:"
+          ],
+          "subcommands": {}
+        },
+        "pod": {
+          "flags": [
+            "-A, --all-namespaces=false:",
+            "--containers=false:",
+            "--field-selector='':",
+            "--no-headers=false:",
+            "-l, --selector='':",
+            "--show-swap=false:",
+            "--sort-by='':",
+            "--sum=false:",
+            "--use-protocol-buffers=true:"
+          ],
+          "subcommands": {}
+        }
+      }
+    },
+    "cordon": {
+      "flags": [
+        "--dry-run='none':",
+        "-l, --selector='':"
+      ],
+      "subcommands": {}
+    },
+    "uncordon": {
+      "flags": [
+        "--dry-run='none':",
+        "-l, --selector='':"
+      ],
+      "subcommands": {}
+    },
+    "drain": {
+      "flags": [
+        "--chunk-size=500:",
+        "--delete-emptydir-data=false:",
+        "--disable-eviction=false:",
+        "--dry-run='none':",
+        "--force=false:",
+        "--grace-period=-1:",
+        "--ignore-daemonsets=false:",
+        "--pod-selector='':",
+        "-l, --selector='':",
+        "--skip-wait-for-delete-timeout=0:",
+        "--timeout=0s:"
+      ],
+      "subcommands": {}
+    },
+    "taint": {
+      "flags": [
+        "--all=false:",
+        "--allow-missing-template-keys=true:",
+        "--dry-run='none':",
+        "--field-manager='kubectl-taint':",
+        "-o, --output='':",
+        "--overwrite=false:",
+        "-l, --selector='':",
+        "--show-managed-fields=false:",
+        "--template='':",
+        "--validate='strict':"
+      ],
+      "subcommands": {}
+    },
+    "describe": {
+      "flags": [
+        "-A, --all-namespaces=false:",
+        "--chunk-size=500:",
+        "-f, --filename=[]:",
+        "-k, --kustomize='':",
+        "-R, --recursive=false:",
+        "-l, --selector='':",
+        "--show-events=true:"
+      ],
+      "subcommands": {}
+    },
+    "logs": {
+      "flags": [
+        "--all-containers=false:",
+        "--all-pods=false:",
+        "-c, --container='':",
+        "-f, --follow=false:",
+        "--ignore-errors=false:",
+        "--insecure-skip-tls-verify-backend=false:",
+        "--limit-bytes=0:",
+        "--max-log-requests=5:",
+        "--pod-running-timeout=20s:",
+        "--prefix=false:",
+        "-p, --previous=false:",
+        "-l, --selector='':",
+        "--since=0s:",
+        "--since-time='':",
+        "--tail=-1:",
+        "--timestamps=false:"
+      ],
+      "subcommands": {}
+    },
+    "attach": {
+      "flags": [
+        "-c, --container='':",
+        "--pod-running-timeout=1m0s:",
+        "-q, --quiet=false:",
+        "-i, --stdin=false:",
+        "-t, --tty=false:"
+      ],
+      "subcommands": {}
+    },
+    "exec": {
+      "flags": [
+        "-c, --container='':",
+        "-f, --filename=[]:",
+        "--pod-running-timeout=1m0s:",
+        "-q, --quiet=false:",
+        "-i, --stdin=false:",
+        "-t, --tty=false:"
+      ],
+      "subcommands": {}
+    },
+    "port-forward": {
+      "flags": [
+        "--address=[localhost]:",
+        "--pod-running-timeout=1m0s:"
+      ],
+      "subcommands": {}
+    },
+    "proxy": {
+      "flags": [
+        "--accept-hosts='^localhost$,^127\\.0\\.0\\.1$,^\\[::1\\]$':",
+        "--accept-paths='^.*':",
+        "--address='127.0.0.1':",
+        "--api-prefix='/':",
+        "--append-server-path=false:",
+        "--disable-filter=false:",
+        "--keepalive=0s:",
+        "-p, --port=8001:",
+        "--reject-methods='^$':",
+        "--reject-paths='^/api/.*/pods/.*/exec,^/api/.*/pods/.*/attach':",
+        "-u, --unix-socket='':",
+        "-w, --www='':",
+        "-P, --www-prefix='/static/':"
+      ],
+      "subcommands": {}
+    },
+    "cp": {
+      "flags": [
+        "-c, --container='':",
+        "--no-preserve=false:",
+        "--retries=0:"
+      ],
+      "subcommands": {}
+    },
+    "auth": {
+      "flags": [],
+      "subcommands": {
+        "can-i": {
+          "flags": [
+            "-A, --all-namespaces=false:",
+            "--list=false:",
+            "--no-headers=false:",
+            "-q, --quiet=false:",
+            "--subresource='':"
+          ],
+          "subcommands": {}
+        },
+        "reconcile": {
+          "flags": [
+            "--allow-missing-template-keys=true:",
+            "--dry-run='none':",
+            "-f, --filename=[]:",
+            "-k, --kustomize='':",
+            "-o, --output='':",
+            "-R, --recursive=false:",
+            "--remove-extra-permissions=false:",
+            "--remove-extra-subjects=false:",
+            "--show-managed-fields=false:",
+            "--template='':"
+          ],
+          "subcommands": {}
+        },
+        "whoami": {
+          "flags": [
+            "--allow-missing-template-keys=true:",
+            "-o, --output='':",
+            "--show-managed-fields=false:",
+            "--template='':"
+          ],
+          "subcommands": {}
+        }
+      }
+    },
+    "debug": {
+      "flags": [
+        "--arguments-only=false:",
+        "--attach=false:",
+        "-c, --container='':",
+        "--copy-to='':",
+        "--custom='':",
+        "--env=[]:",
+        "-f, --filename=[]:",
+        "--image='':",
+        "--image-pull-policy='':",
+        "--keep-annotations=false:",
+        "--keep-init-containers=true:",
+        "--keep-labels=false:",
+        "--keep-liveness=false:",
+        "--keep-readiness=false:",
+        "--keep-startup=false:",
+        "--profile='legacy':",
+        "-q, --quiet=false:",
+        "--replace=false:",
+        "--same-node=false:",
+        "--set-image=[]:",
+        "--share-processes=true:",
+        "-i, --stdin=false:",
+        "--target='':",
+        "-t, --tty=false:"
+      ],
+      "subcommands": {}
+    },
+    "events": {
+      "flags": [
+        "-A, --all-namespaces=false:",
+        "--allow-missing-template-keys=true:",
+        "--chunk-size=500:",
+        "--for='':",
+        "--no-headers=false:",
+        "-o, --output='':",
+        "--show-managed-fields=false:",
+        "--template='':",
+        "--types=[]:",
+        "-w, --watch=false:"
+      ],
+      "subcommands": {}
+    },
+    "diff": {
+      "flags": [
+        "--concurrency=1:",
+        "--field-manager='kubectl-client-side-apply':",
+        "-f, --filename=[]:",
+        "--force-conflicts=false:",
+        "-k, --kustomize='':",
+        "--prune=false:",
+        "--prune-allowlist=[]:",
+        "-R, --recursive=false:",
+        "-l, --selector='':",
+        "--server-side=false:",
+        "--show-managed-fields=false:"
+      ],
+      "subcommands": {}
+    },
+    "apply": {
+      "flags": [
+        "--all=false:",
+        "--allow-missing-template-keys=true:",
+        "--cascade='background':",
+        "--dry-run='none':",
+        "--field-manager='kubectl-client-side-apply':",
+        "-f, --filename=[]:",
+        "--force=false:",
+        "--force-conflicts=false:",
+        "--grace-period=-1:",
+        "-k, --kustomize='':",
+        "--openapi-patch=true:",
+        "-o, --output='':",
+        "--overwrite=true:",
+        "--prune=false:",
+        "--prune-allowlist=[]:",
+        "-R, --recursive=false:",
+        "-l, --selector='':",
+        "--server-side=false:",
+        "--show-managed-fields=false:",
+        "--subresource='':",
+        "--template='':",
+        "--timeout=0s:",
+        "--validate='strict':",
+        "--wait=false:"
+      ],
+      "subcommands": {
+        "edit-last-applied": {
+          "flags": [
+            "--allow-missing-template-keys=true:",
+            "--field-manager='kubectl-client-side-apply':",
+            "-f, --filename=[]:",
+            "-k, --kustomize='':",
+            "-o, --output='':",
+            "-R, --recursive=false:",
+            "--show-managed-fields=false:",
+            "--template='':",
+            "--validate='strict':",
+            "--windows-line-endings=false:"
+          ],
+          "subcommands": {}
+        },
+        "set-last-applied": {
+          "flags": [
+            "--allow-missing-template-keys=true:",
+            "--create-annotation=false:",
+            "--dry-run='none':",
+            "-f, --filename=[]:",
+            "-o, --output='':",
+            "--show-managed-fields=false:",
+            "--template='':"
+          ],
+          "subcommands": {}
+        },
+        "view-last-applied": {
+          "flags": [
+            "--all=false:",
+            "-f, --filename=[]:",
+            "-k, --kustomize='':",
+            "-o, --output='yaml':",
+            "-R, --recursive=false:",
+            "-l, --selector='':"
+          ],
+          "subcommands": {}
+        }
+      }
+    },
+    "patch": {
+      "flags": [
+        "--allow-missing-template-keys=true:",
+        "--dry-run='none':",
+        "--field-manager='kubectl-patch':",
+        "-f, --filename=[]:",
+        "-k, --kustomize='':",
+        "--local=false:",
+        "-o, --output='':",
+        "-p, --patch='':",
+        "--patch-file='':",
+        "-R, --recursive=false:",
+        "--show-managed-fields=false:",
+        "--subresource='':",
+        "--template='':",
+        "--type='strategic':"
+      ],
+      "subcommands": {}
+    },
+    "replace": {
+      "flags": [
+        "--allow-missing-template-keys=true:",
+        "--cascade='background':",
+        "--dry-run='none':",
+        "--field-manager='kubectl-replace':",
+        "-f, --filename=[]:",
+        "--force=false:",
+        "--grace-period=-1:",
+        "-k, --kustomize='':",
+        "-o, --output='':",
+        "--raw='':",
+        "-R, --recursive=false:",
+        "--save-config=false:",
+        "--show-managed-fields=false:",
+        "--subresource='':",
+        "--template='':",
+        "--timeout=0s:",
+        "--validate='strict':",
+        "--wait=false:"
+      ],
+      "subcommands": {}
+    },
+    "wait": {
+      "flags": [
+        "--all=false:",
+        "-A, --all-namespaces=false:",
+        "--allow-missing-template-keys=true:",
+        "--field-selector='':",
+        "-f, --filename=[]:",
+        "--for='':",
+        "--local=false:",
+        "-o, --output='':",
+        "-R, --recursive=true:",
+        "-l, --selector='':",
+        "--show-managed-fields=false:",
+        "--template='':",
+        "--timeout=30s:"
+      ],
+      "subcommands": {}
+    },
+    "kustomize": {
+      "flags": [
+        "--as-current-user=false:",
+        "--enable-alpha-plugins=false:",
+        "--enable-helm=false:",
+        "-e, --env=[]:",
+        "--helm-api-versions=[]:",
+        "--helm-command='helm':",
+        "--helm-debug=false:",
+        "--helm-kube-version='':",
+        "--load-restrictor='LoadRestrictionsRootOnly':",
+        "--mount=[]:",
+        "--network=false:",
+        "--network-name='bridge':",
+        "-o, --output='':"
+      ],
+      "subcommands": {}
+    },
+    "label": {
+      "flags": [
+        "--all=false:",
+        "-A, --all-namespaces=false:",
+        "--allow-missing-template-keys=true:",
+        "--dry-run='none':",
+        "--field-manager='kubectl-label':",
+        "--field-selector='':",
+        "-f, --filename=[]:",
+        "-k, --kustomize='':",
+        "--list=false:",
+        "--local=false:",
+        "-o, --output='':",
+        "--overwrite=false:",
+        "-R, --recursive=false:",
+        "--resource-version='':",
+        "-l, --selector='':",
+        "--show-managed-fields=false:",
+        "--template='':"
+      ],
+      "subcommands": {}
+    },
+    "annotate": {
+      "flags": [
+        "--all=false:",
+        "-A, --all-namespaces=false:",
+        "--allow-missing-template-keys=true:",
+        "--dry-run='none':",
+        "--field-manager='kubectl-annotate':",
+        "--field-selector='':",
+        "-f, --filename=[]:",
+        "-k, --kustomize='':",
+        "--list=false:",
+        "--local=false:",
+        "-o, --output='':",
+        "--overwrite=false:",
+        "-R, --recursive=false:",
+        "--resource-version='':",
+        "-l, --selector='':",
+        "--show-managed-fields=false:",
+        "--template='':"
+      ],
+      "subcommands": {}
+    },
+    "completion": {
+      "flags": [],
+      "subcommands": {}
+    },
+    "alpha": {
+      "flags": [],
+      "subcommands": {
+        "kuberc": {
+          "flags": [],
+          "subcommands": {
+            "set": {
+              "flags": [
+                "--appendarg=[]:",
+                "--command='':",
+                "--kuberc='':",
+                "--name='':",
+                "--option=[]:",
+                "--overwrite=false:",
+                "--prependarg=[]:",
+                "--section='':"
+              ],
+              "subcommands": {}
+            },
+            "view": {
+              "flags": [
+                "--allow-missing-template-keys=true:",
+                "--kuberc='':",
+                "-o, --output='yaml':",
+                "--show-managed-fields=false:",
+                "--template='':"
+              ],
+              "subcommands": {}
+            }
+          }
+        }
+      }
+    },
+    "api-resources": {
+      "flags": [
+        "--api-group='':",
+        "--cached=false:",
+        "--categories=[]:",
+        "--namespaced=true:",
+        "--no-headers=false:",
+        "-o, --output='':",
+        "--show-managed-fields=false:",
+        "--sort-by='':",
+        "--verbs=[]:"
+      ],
+      "subcommands": {}
+    },
+    "api-versions": {
+      "flags": [],
+      "subcommands": {}
+    },
+    "config": {
+      "flags": [],
+      "subcommands": {
+        "current-context": {
+          "flags": [],
+          "subcommands": {}
+        },
+        "delete-cluster": {
+          "flags": [],
+          "subcommands": {}
+        },
+        "delete-context": {
+          "flags": [],
+          "subcommands": {}
+        },
+        "delete-user": {
+          "flags": [],
+          "subcommands": {}
+        },
+        "get-clusters": {
+          "flags": [],
+          "subcommands": {}
+        },
+        "get-contexts": {
+          "flags": [
+            "--no-headers=false:",
+            "-o, --output='':"
+          ],
+          "subcommands": {}
+        },
+        "get-users": {
+          "flags": [],
+          "subcommands": {}
+        },
+        "rename-context": {
+          "flags": [],
+          "subcommands": {}
+        },
+        "set": {
+          "flags": [
+            "--set-raw-bytes=false:"
+          ],
+          "subcommands": {}
+        },
+        "set-cluster": {
+          "flags": [
+            "--certificate-authority='':",
+            "--embed-certs=false:",
+            "--insecure-skip-tls-verify=false:",
+            "--proxy-url='':",
+            "--server='':",
+            "--tls-server-name='':"
+          ],
+          "subcommands": {}
+        },
+        "set-context": {
+          "flags": [
+            "--cluster='':",
+            "--current=false:",
+            "-n, --namespace='':",
+            "--user='':"
+          ],
+          "subcommands": {}
+        },
+        "set-credentials": {
+          "flags": [
+            "--client-certificate=certfile --client-key=keyfile",
+            "--token=bearer_token",
+            "--username=basic_user --password=basic_password",
+            "--auth-provider='':",
+            "--auth-provider-arg=[]:",
+            "--client-certificate='':",
+            "--client-key='':",
+            "--embed-certs=false:",
+            "--exec-api-version='':",
+            "--exec-arg=[]:",
+            "--exec-command='':",
+            "--exec-env=[]:",
+            "--exec-interactive-mode='':",
+            "--exec-provide-cluster-info=false:",
+            "--password='':",
+            "--token='':",
+            "--username='':"
+          ],
+          "subcommands": {}
+        },
+        "unset": {
+          "flags": [],
+          "subcommands": {}
+        },
+        "use-context": {
+          "flags": [],
+          "subcommands": {}
+        },
+        "view": {
+          "flags": [
+            "--allow-missing-template-keys=true:",
+            "--flatten=false:",
+            "--merge=true:",
+            "--minify=false:",
+            "-o, --output='yaml':",
+            "--raw=false:",
+            "--show-managed-fields=false:",
+            "--template='':"
+          ],
+          "subcommands": {}
+        }
+      }
+    },
+    "plugin": {
+      "flags": [],
+      "subcommands": {
+        "list": {
+          "flags": [
+            "--name-only=false:"
+          ],
+          "subcommands": {}
+        }
+      }
+    },
+    "version": {
+      "flags": [
+        "--client=false:",
+        "-o, --output='':"
+      ],
+      "subcommands": {}
+    }
+  }
+}
