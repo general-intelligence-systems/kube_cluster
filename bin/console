@@ -5,4 +5,7 @@ require "bundler/setup"
 require "kube/cluster"
 require "irb"
 
+GEM_HOME = File.expand_path('..', __dir__)
+ENV["KUBECONFIG"] = File.join(GEM_HOME, "kubeconfig.yaml")
+
 IRB.start(__FILE__)
