@@ -24,9 +24,21 @@ def extract(args = [])
   { flags:, subcommands: }
 end
 
+def minimize(tree)
+  tree[:subcommands]
+    .transform_values { |v| minimize(v) }
+end
+
 GEM_DIR = File.expand_path('..', __dir__)
 
-File.write(
-  File.join(GEM_DIR, "data", "kubectl-command-tree-v1.json"),
-  JSON.pretty_generate(extract)
-)
+extract.then do |tree|
+  File.write(
+    File.join(GEM_DIR, "data", "kubectl-command-tree-v1.json"),
+    JSON.pretty_generate(tree)
+  )
+
+  File.write(
+    File.join(GEM_DIR, "data", "kubectl-command-tree-v1-minimal.json"),
+    JSON.pretty_generate(minimize(tree))
+  )
+end
