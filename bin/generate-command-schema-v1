@@ -27,6 +27,6 @@ end
 GEM_DIR = File.expand_path('..', __dir__)
 
 File.write(
-  File.join(GEM_DIR, "data", "kubectl-command-tree.json"),
+  File.join(GEM_DIR, "data", "kubectl-command-tree-v1.json"),
   JSON.pretty_generate(extract)
 )
