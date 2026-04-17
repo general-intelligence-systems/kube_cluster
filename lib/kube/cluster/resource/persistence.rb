@@ -8,61 +8,58 @@ module Kube
     class Resource < Kube::Schema::Resource
       module Persistence
         def apply
-          json = JSON.generate(deep_stringify_keys(to_h))
-          kubectl("apply", "-f", "-", stdin: json)
-          reload
-          true
+          JSON.generate(deep_stringify_keys(to_h)).then do |json|
+            kubectl("apply", "-f", "-", stdin: json)
+            reload
+            true
+          end
         end
 
         def patch(type: "strategic")
-          raise Kube::CommandError, "cannot patch a resource without a name" unless persisted?
+          if persisted?
+            diff = patch_data
 
-          diff = patch_data
-          return false if diff.empty?
-
-          json = JSON.generate(deep_stringify_keys(diff))
-          kubectl(
-            "patch", resource_type, name,
-            *ns_flags,
-            "--type", type,
-            "-p", json
-          )
-          reload
-          true
+            if diff.empty?
+              false
+            else
+              json = JSON.generate(deep_stringify_keys(diff))
+              kubectl("patch", resource_type, name, *ns_flags, "--type", type, "-p", json)
+              reload
+              true
+            end
+          else
+            raise Kube::CommandError, "cannot patch a resource without a name"
+          end
         end
 
         def delete
-          raise Kube::CommandError, "cannot delete a resource without a name" unless persisted?
-
-          kubectl("delete", resource_type, name, *ns_flags)
-          true
+          if persisted?
+            kubectl("delete", resource_type, name, *ns_flags)
+            true
+          else
+            raise Kube::CommandError, "cannot delete a resource without a name"
+          end
         end
 
         def reload
-          raise Kube::CommandError, "cannot reload a resource without a name" unless persisted?
-
-          json = kubectl("get", resource_type, name, *ns_flags, "-o", "json")
-          hash = JSON.parse(json)
-          @data = BlackHoleStruct.new(hash)
-          snapshot!
-          self
+          if persisted?
+            tap do
+              kubectl("get", resource_type, name, *ns_flags, "-o", "json").then do |json|
+                JSON.parse(json).then do |hash|
+                  @data = BlackHoleStruct.new(hash)
+                  snapshot!
+                end
+              end
+            end
+          else
+            raise Kube::CommandError, "cannot reload a resource without a name"
+          end
         end
 
         private
 
-          def kubectl(*args, stdin: nil)
-            cmd = ["kubectl", *args]
-            stdout, stderr, status = Open3.capture3(*cmd, stdin_data: stdin)
-
-            unless status.success?
-              raise Kube::CommandError.from_kubectl(
-                subcommand: args.first,
-                stderr: stderr.strip,
-                exit_code: status.exitstatus
-              )
-            end
-
-            stdout
+          def kubectl(*args)
+            @cluster.connection.ctl.run(args.join(" "))
           end
       end
     end

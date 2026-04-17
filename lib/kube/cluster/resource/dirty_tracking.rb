@@ -52,37 +52,52 @@ module Kube
           end
 
           def deep_diff(current, original)
-            result = {}
+            Hash.new.tap do |result|
+              merged_keys = current.keys | original.keys
+            
+              merged_keys.each do |key|
+                cur_val  = current[key]
+                orig_val = original[key]
+            
+                if cur_val.is_a?(Hash) && orig_val.is_a?(Hash)
+                  nested = deep_diff(cur_val, orig_val)
 
-            current.each do |key, cur_val|
-              orig_val = original[key]
-
-              if cur_val.is_a?(Hash) && orig_val.is_a?(Hash)
-                nested = deep_diff(cur_val, orig_val)
-                result[key] = nested unless nested.empty?
-              elsif cur_val != orig_val
-                result[key] = cur_val
+                  if nested.empty?
+                    next
+                  else
+                    result[key] = nested 
+                  end
+                elsif cur_val != orig_val
+                  result[key] = [orig_val, cur_val]
+                end
               end
             end
-
-            result
           end
 
           def diff_keys(current, original)
-            keys = Set.new
-            (current.keys | original.keys).each do |key|
-              keys << key if current[key] != original[key]
-            end
-            keys.to_a
+            Set.new.tap do |keys|
+              merged_keys = (current.keys | original.keys)
+
+              merged_keys.each do |key|
+                if current[key] != original[key]
+                  keys << key 
+                end
+              end
+            end.to_a
           end
 
           def build_changes(current, original)
-            result = {}
-            (current.keys | original.keys).each do |key|
-              next if current[key] == original[key]
-              result[key] = [original[key], current[key]]
+            Hash.new.tap do |hash|
+              merged_keys = current.keys | original.keys
+
+              merged_keys.each do |key|
+                if current[key] == original[key]
+                  next
+                else
+                  result[key] = [original[key], current[key]]
+                end
+              end
             end
-            result
           end
 
           def deep_dup(obj)
