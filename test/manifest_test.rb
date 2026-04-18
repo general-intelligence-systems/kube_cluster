@@ -135,4 +135,114 @@ class ManifestTest < Minitest::Test
     r = enum.first
     assert_equal "production", r.to_h.dig(:metadata, :namespace)
   end
+
+  # ── Generative middleware produces new resources ──────────────────────────
+
+  class GenerativeManifest < Kube::Cluster::Manifest
+    stack do
+      use Middleware::ServiceForDeployment
+    end
+  end
+
+  def test_generative_middleware_adds_service
+    m = GenerativeManifest.new
+    m << Kube::Schema["Deployment"].new {
+      metadata.name = "web"
+      metadata.namespace = "default"
+      spec.selector.matchLabels = { app: "web" }
+      spec.template.metadata.labels = { app: "web" }
+      spec.template.spec.containers = [
+        { name: "web", image: "nginx", ports: [{ name: "http", containerPort: 8080 }] },
+      ]
+    }
+
+    resources = m.to_a
+    kinds = resources.map { |r| r.to_h[:kind] }
+
+    assert_equal %w[Deployment Service], kinds
+  end
+
+  def test_generative_middleware_does_not_affect_non_matching_resources
+    m = GenerativeManifest.new
+    m << Kube::Schema["ConfigMap"].new {
+      metadata.name = "config"
+    }
+
+    resources = m.to_a
+    assert_equal 1, resources.size
+    assert_equal "ConfigMap", resources.first.to_h[:kind]
+  end
+
+  # ── Generated resources flow through subsequent middleware stages ─────────
+
+  class GenerativeThenTransformManifest < Kube::Cluster::Manifest
+    stack do
+      use Middleware::ServiceForDeployment           # generates Service
+      use Middleware::Namespace, "production"         # namespaces everything
+      use Middleware::Labels, managed_by: "middleware" # labels everything
+    end
+  end
+
+  def test_generated_resources_flow_through_subsequent_stages
+    m = GenerativeThenTransformManifest.new
+    m << Kube::Schema["Deployment"].new {
+      metadata.name = "web"
+      spec.selector.matchLabels = { app: "web" }
+      spec.template.metadata.labels = { app: "web" }
+      spec.template.spec.containers = [
+        { name: "web", image: "nginx", ports: [{ name: "http", containerPort: 8080 }] },
+      ]
+    }
+
+    resources = m.to_a
+    assert_equal 2, resources.size
+
+    # Both the Deployment and the generated Service got namespaced and labeled
+    resources.each do |r|
+      h = r.to_h
+      assert_equal "production", h.dig(:metadata, :namespace),
+        "Expected #{h[:kind]} to be namespaced"
+      assert_equal "middleware", h.dig(:metadata, :labels, :"app.kubernetes.io/managed-by"),
+        "Expected #{h[:kind]} to be labeled"
+    end
+  end
+
+  # ── Multi-generative: chained generation ─────────────────────────────────
+
+  class ChainedGenerativeManifest < Kube::Cluster::Manifest
+    stack do
+      use Middleware::ServiceForDeployment   # Deployment → [Deployment, Service]
+      use Middleware::IngressForService       # Service with expose label → [Service, Ingress]
+      use Middleware::HPAForDeployment        # Deployment with autoscale label → [Deployment, HPA]
+    end
+  end
+
+  def test_chained_generative_middleware
+    m = ChainedGenerativeManifest.new
+    m << Kube::Schema["Deployment"].new {
+      metadata.name = "web"
+      metadata.namespace = "default"
+      metadata.labels = {
+        "app.kubernetes.io/expose":    "app.example.com",
+        "app.kubernetes.io/autoscale": "2-10",
+      }
+      spec.selector.matchLabels = { app: "web" }
+      spec.template.metadata.labels = { app: "web" }
+      spec.template.spec.containers = [
+        { name: "web", image: "nginx", ports: [{ name: "http", containerPort: 8080 }] },
+      ]
+    }
+
+    resources = m.to_a
+    kinds = resources.map { |r| r.to_h[:kind] }
+
+    # Deployment → ServiceForDeployment → [Deployment, Service]
+    # Service has expose label (copied from Deployment) → IngressForService → [Service, Ingress]
+    # Deployment has autoscale label → HPAForDeployment → [Deployment, HPA]
+    assert_includes kinds, "Deployment"
+    assert_includes kinds, "Service"
+    assert_includes kinds, "Ingress"
+    assert_includes kinds, "HorizontalPodAutoscaler"
+    assert_equal 4, resources.size
+  end
 end

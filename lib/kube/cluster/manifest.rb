@@ -8,6 +8,9 @@ require_relative "manifest/middleware/annotations"
 require_relative "manifest/middleware/resource_preset"
 require_relative "manifest/middleware/security_context"
 require_relative "manifest/middleware/pod_anti_affinity"
+require_relative "manifest/middleware/service_for_deployment"
+require_relative "manifest/middleware/ingress_for_service"
+require_relative "manifest/middleware/hpa_for_deployment"
 
 module Kube
   module Cluster
@@ -39,15 +42,19 @@ module Kube
         @stack = Stack.new(&block)
       end
 
-      # Enumerate resources after passing each one through the
-      # middleware stack. Every method that reads the manifest
-      # (to_yaml, to_a, map, select, etc.) goes through here.
+      # Enumerate resources after passing them through the middleware
+      # stack. The entire manifest is passed to the stack so that
+      # generative middleware can introduce new resources that
+      # subsequent stages will see and process.
+      #
+      # Every method that reads the manifest (to_yaml, to_a, map,
+      # select, etc.) goes through here.
       def each(&block)
         return enum_for(:each) unless block
 
         stack = self.class.instance_variable_get(:@stack)
         if stack
-          @resources.map { |r| stack.call(r) }.each(&block)
+          stack.call(@resources).each(&block)
         else
           @resources.each(&block)
         end
