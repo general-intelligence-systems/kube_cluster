@@ -94,7 +94,7 @@ module Kube
                 if current[key] == original[key]
                   next
                 else
-                  result[key] = [original[key], current[key]]
+                  hash[key] = [original[key], current[key]]
                 end
               end
             end
