@@ -1,0 +1,43 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+
+
+
+  build-and-push-gem:
+    uses: ./.github/workflows/build-and-push-gem.yml
+    permissions:
+      contents: read
+      id-token: write
+    secrets: inherit
+
+
+
+  github-release:
+
+    needs: [build-and-push-gem]
+
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: release/
+          merge-multiple: true
+
+      - name: Consolidate checksums
+        run: |
+          cd release
+          cat SHA256SUMS-linux-*.txt > SHA256SUMS.txt
+          rm SHA256SUMS-linux-*.txt
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: release/*
+          generate_release_notes: true

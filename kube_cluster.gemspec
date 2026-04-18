@@ -32,7 +32,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rake", "~> 13.0"
   spec.add_development_dependency "rubocop", "~> 1.21"
 
-  spec.add_dependency "kube_schema", "~> 1.1.0"
+  spec.add_dependency "kube_schema", "~> 1.2.0"
   spec.add_dependency "kube_kit", "> 0"
-  spec.add_dependency "kube_kubectl", "~> 1.0.0"
+  spec.add_dependency "kube_kubectl", "~> 2.0.0"
 end

@@ -3,16 +3,27 @@ PATH
   specs:
     kube_cluster (0.2.0)
       kube_kit (> 0)
-      kube_kubectl (~> 1.0.0)
-      kube_schema (~> 1.1.0)
+      kube_kubectl (~> 2.0.0)
+      kube_schema (~> 1.2.0)
 
 GEM
   remote: https://rubygems.org/
   specs:
     ast (2.4.3)
-    bigdecimal (4.1.1)
+    bigdecimal (4.1.2)
     black_hole_struct (0.1.3)
+    date (3.5.1)
+    debug (1.11.1)
+      irb (~> 1.10)
+      reline (>= 0.3.8)
+    erb (6.0.3)
     hana (1.3.7)
+    io-console (0.8.2)
+    irb (1.17.0)
+      pp (>= 0.6.0)
+      prism (>= 1.3.0)
+      rdoc (>= 4.0.0)
+      reline (>= 0.4.2)
     json (2.19.3)
     json_schemer (2.5.0)
       bigdecimal
@@ -20,8 +31,13 @@ GEM
       regexp_parser (~> 2.0)
       simpleidn (~> 0.2)
     kube_kit (0.2.0)
-    kube_kubectl (1.0.0)
-    kube_schema (1.1.0)
+    kube_kubectl (2.0.1)
+      debug (~> 1.11)
+      json_schemer (~> 2.5)
+      rubyshell (~> 1.5)
+      shellwords (~> 0.2.2)
+      string_builder (~> 1.2.0)
+    kube_schema (1.2.1)
       black_hole_struct (~> 0.1)
       json_schemer (~> 2.5)
       rubyshell (~> 1.5)
@@ -32,11 +48,23 @@ GEM
     parser (3.3.11.1)
       ast (~> 2.4.1)
       racc
+    pp (0.6.3)
+      prettyprint
+    prettyprint (0.2.0)
     prism (1.9.0)
+    psych (5.3.1)
+      date
+      stringio
     racc (1.8.1)
     rainbow (3.1.1)
     rake (13.4.2)
+    rdoc (7.2.0)
+      erb
+      psych (>= 4.0.0)
+      tsort
     regexp_parser (2.12.0)
+    reline (0.6.3)
+      io-console (~> 0.5)
     rubocop (1.86.1)
       json (~> 2.3)
       language_server-protocol (~> 3.17.0.2)
@@ -53,7 +81,11 @@ GEM
       prism (~> 1.7)
     ruby-progressbar (1.13.0)
     rubyshell (1.5.0)
+    shellwords (0.2.2)
     simpleidn (0.2.3)
+    string_builder (1.2.0)
+    stringio (3.2.0)
+    tsort (0.2.0)
     unicode-display_width (3.2.0)
       unicode-emoji (~> 4.1)
     unicode-emoji (4.2.0)
