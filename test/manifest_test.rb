@@ -207,6 +207,25 @@ class ManifestTest < Minitest::Test
     end
   end
 
+  # ── YAML serializes integers correctly ──────────────────────────────────
+
+  def test_to_yaml_serializes_integers_as_plain_values
+    m = BareManifest.new
+    m << Kube::Schema["Deployment"].new {
+      metadata.name = "web"
+      spec.selector.matchLabels = { app: "web" }
+      spec.template.metadata.labels = { app: "web" }
+      spec.template.spec.containers = [
+        { name: "web", image: "nginx", ports: [{ name: "http", containerPort: 8080 }] },
+      ]
+    }
+
+    yaml = m.to_yaml
+    refute_includes yaml, "!ruby/object:Integer",
+      "Integer values must serialize as plain YAML numbers, not !ruby/object:Integer"
+    assert_includes yaml, "containerPort: 8080"
+  end
+
   # ── Multi-generative: chained generation ─────────────────────────────────
 
   class ChainedGenerativeManifest < Kube::Cluster::Manifest

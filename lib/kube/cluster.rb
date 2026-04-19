@@ -8,7 +8,6 @@ require_relative "cluster/instance"
 require_relative "cluster/resource"
 require_relative "cluster/manifest"
 require 'kube/ctl'
-require 'kube/schema'
 
 module Kube
   def self.cluster
