@@ -1,4 +1,4 @@
 module Middleware
-  class Namespace < Kube::Cluster::Manifest::Middleware
+  class Namespace < Kube::Cluster::Middleware
   end
 end

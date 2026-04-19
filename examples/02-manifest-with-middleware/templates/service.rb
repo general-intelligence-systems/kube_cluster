@@ -1,6 +1,6 @@
 class Service < Kube::Cluster["Service"]
   def initialize(namespace:)
-    build {
+    super {
       metadata.name = namespace
 
       spec.selector = MATCH_LABELS

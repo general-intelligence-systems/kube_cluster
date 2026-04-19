@@ -1,6 +1,6 @@
 class Ingress < Kube::Cluster["Ingress"]
   def initialize(namespace:)
-    build {
+    super {
       metadata.name = namespace
       metadata.annotations = {
         "cert-manager.io/cluster-issuer": "letsencrypt-prod",

@@ -1,6 +1,6 @@
 class Deployment < Kube::Cluster["Deployment"]
   def initialize(namespace:)
-    build {
+    super {
       metadata.name = namespace
 
       spec.replicas = 3

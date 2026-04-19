@@ -1,4 +1,4 @@
 module Middleware
-  class Labels < Kube::Cluster::Manifest::Middleware
+  class Labels < Kube::Cluster::Middleware
   end
 end

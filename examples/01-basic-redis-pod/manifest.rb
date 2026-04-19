@@ -1,9 +1,9 @@
 require "bundler/setup"
-require "kube/schema"
+require "kube/cluster"
 
 class RedisPod < Kube::Cluster['Pod']
   def initialize(container_name: 'my-redis-container', **options, &block)
-    super {
+    super(**options) {
       spec.containers = [
         {
           name: container_name,

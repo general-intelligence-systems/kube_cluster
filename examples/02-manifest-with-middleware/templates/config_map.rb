@@ -1,12 +1,12 @@
 class ConfigMap < Kube::Cluster["ConfigMap"]
   def initialize(namespace:)
-    build {
+    super {
       metadata.name = "#{namespace}-config"
       spec.data = {
-        RAILS_ENV:     "production",
-        LOG_LEVEL:     "info",
-        WORKERS:       "4",
-        PORT:          "3000",
+        "RAILS_ENV": "production",
+        "LOG_LEVEL": "info",
+        "WORKERS":   "4",
+        "PORT":      "3000",
       }
     }
   end

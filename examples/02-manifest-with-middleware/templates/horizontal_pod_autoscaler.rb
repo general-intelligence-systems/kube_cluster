@@ -1,6 +1,6 @@
 class HorizontalPodAutoscaler < Kube::Cluster["HorizontalPodAutoscaler"]
   def initialize(namespace:)
-    build {
+    super {
       metadata.name = namespace
 
       spec.scaleTargetRef.apiVersion = "apps/v1"
