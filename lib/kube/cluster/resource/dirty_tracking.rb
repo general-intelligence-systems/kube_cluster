@@ -94,7 +94,7 @@ module Kube
                 if current[key] == original[key]
                   next
                 else
-                  hash[key] = [original[key], current[key]]
+                  hash[key] = [deep_dup(original[key]), deep_dup(current[key])]
                 end
               end
             end

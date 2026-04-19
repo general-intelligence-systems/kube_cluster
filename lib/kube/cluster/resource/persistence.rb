@@ -46,7 +46,7 @@ module Kube
             tap do
               kubectl("get", resource_type, name, *ns_flags, "-o", "json").then do |json|
                 JSON.parse(json).then do |hash|
-                  @data = BlackHoleStruct.new(hash)
+                  @data = deep_symbolize_keys(hash)
                   snapshot!
                 end
               end
