@@ -1,4 +1,4 @@
-class RubyOnRails < Kube::Schema["Deployment"]
+class RubyOnRails < Kube::Cluster["Deployment"]
   default do
     metadata.name      = name
     metadata.namespace = ns

@@ -1,4 +1,4 @@
-class ConfigMap < Kube::Schema["ConfigMap"]
+class ConfigMap < Kube::Cluster["ConfigMap"]
   def initialize(namespace:)
     build {
       metadata.name = "#{namespace}-config"

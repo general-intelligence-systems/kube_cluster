@@ -10,7 +10,7 @@ class Postgresql < Kube::Cluster::Manifest
     self << Secret.new
   end
 
-  class StatefulSet < Kube::Schema["StatefulSet"]
+  class StatefulSet < Kube::Cluster["StatefulSet"]
     metadata.name      = db_name
     metadata.namespace = db_ns
     metadata.labels    = db_labels
@@ -55,12 +55,12 @@ class Postgresql < Kube::Cluster::Manifest
     ]
   end
 
-  class Namespace < Kube::Schema["Namespace"]
+  class Namespace < Kube::Cluster["Namespace"]
     metadata.name   = db_ns
     metadata.labels = db_labels.reject { |k, _| k == :"app.kubernetes.io/component" }
   end
 
-  class Secret < Kube::Schema["Secret"]
+  class Secret < Kube::Cluster["Secret"]
     metadata.name      = db_name
     metadata.namespace = db_ns
     metadata.labels    = db_labels
@@ -70,7 +70,7 @@ class Postgresql < Kube::Cluster::Manifest
 
   # Headless service for StatefulSet DNS — explicit because the
   # middleware-generated Service is a regular ClusterIP service.
-  class Service < Kube::Schema["Service"]
+  class Service < Kube::Cluster["Service"]
     metadata.name      = "#{db_name}-headless"
     metadata.namespace = db_ns
     metadata.labels    = db_labels

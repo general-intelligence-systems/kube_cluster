@@ -44,12 +44,12 @@ app = MyApp.new("example.com", size: :small) do |m|
   # Middleware injects:   resource limits, security context, anti-affinity, labels
 
   [
-    Kube::Schema["Namespace"].new {
+    Kube::Cluster["Namespace"].new {
       metadata.name   = ns
       metadata.labels = labels
     },
 
-    Kube::Schema["ConfigMap"].new {
+    Kube::Cluster["ConfigMap"].new {
       metadata.name      = "#{name}-config"
       metadata.namespace = ns
       metadata.labels    = labels

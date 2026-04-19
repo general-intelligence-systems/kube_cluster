@@ -1,4 +1,4 @@
-class Ingress < Kube::Schema["Ingress"]
+class Ingress < Kube::Cluster["Ingress"]
   def initialize(namespace:)
     build {
       metadata.name = namespace

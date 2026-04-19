@@ -1,4 +1,4 @@
-class Service < Kube::Schema["Service"]
+class Service < Kube::Cluster["Service"]
   def initialize(namespace:)
     build {
       metadata.name = namespace

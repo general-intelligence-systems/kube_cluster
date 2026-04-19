@@ -1,4 +1,4 @@
-class HorizontalPodAutoscaler < Kube::Schema["HorizontalPodAutoscaler"]
+class HorizontalPodAutoscaler < Kube::Cluster["HorizontalPodAutoscaler"]
   def initialize(namespace:)
     build {
       metadata.name = namespace
