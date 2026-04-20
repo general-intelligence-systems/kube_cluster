@@ -21,6 +21,7 @@ require_relative "resources/self_signed_issuer"
 
 manifest =
   Kube::Cluster::Manifest.new(
+
     CertManager.apply_values(
       {
         "installCRDs"  => true,
