@@ -1,60 +1,45 @@
 require "bundler/setup"
 require "kube/cluster"
 
-require_relative "resources/nginx"
+CertManager = Kube::Helm::Repo
+  .new("jetstack", url: "https://charts.jetstack.io")
+  .fetch("cert-manager", version: "1.17.2")
 
-# ── Nginx Deployment + cert-manager ───────────────────────────────────
-#
-# Deploys an nginx Deployment (config via ConfigMap) with automatic TLS
-# via cert-manager and Let's Encrypt. Uses k3s's built-in Traefik ingress.
-
-# ── 1. cert-manager (Helm) ───────────────────────────────────────────
-
-certmanager_repo = Kube::Helm::Repo.new(
-  "jetstack",
-  url: "https://charts.jetstack.io",
-)
-certmanager_repo.add
-
-certmanager_chart = certmanager_repo.chart("cert-manager", version: "1.17.2")
-
-certmanager_chart.crds.each do |crd|
-  s = crd.to_json_schema
-  Kube::Schema.register(s[:kind], schema: s[:schema], api_version: s[:api_version])
+CertManager.crds.each do |crd|
+  crd.to_json_schema.then do |s|
+    Kube::Schema.register(
+      s[:kind],
+      schema: s[:schema],
+      api_version: s[:api_version]
+    )
+  end
 end
 
+require_relative "resources/namespace"
+require_relative "resources/nginx"
 require_relative "resources/self_signed_issuer"
 
-certmanager_resources = certmanager_chart.template(
-  release:   "cert-manager",
-  namespace: "cert-manager",
-  values: {
-    "installCRDs"  => true,
-    "replicaCount" => 2,
-    "resources" => {
-      "requests" => { "cpu" => "50m",  "memory" => "64Mi" },
-      "limits"   => { "cpu" => "200m", "memory" => "128Mi" },
-    },
-    "webhook" => {
-      "replicaCount" => 2,
-    },
-  },
-)
+manifest =
+  Kube::Cluster::Manifest.new(
+    CertManager.apply_values(
+      {
+        "installCRDs"  => true,
+        "replicaCount" => 2,
+        "resources" => {
+          "requests" => { "cpu" => "50m",  "memory" => "64Mi" },
+          "limits"   => { "cpu" => "200m", "memory" => "128Mi" },
+        },
+        "webhook" => {
+          "replicaCount" => 2,
+        },
+      },
+      release:   "cert-manager",
+      namespace: "cert-manager",
+    ),
 
-manifest = Kube::Cluster::Manifest.new(
-  Kube::Cluster["Namespace"].new { metadata.name = "cert-manager" },
-  *certmanager_resources,
+    Namespace.new(name: "cert-manager"),
+    Nginx.new(name: "nginx-app", host: "app.example.com"),
+    SelfSignedIssuer.new,
+  )
 
-  SelfSignedIssuer.new,
-
-  Nginx.new(name: "nginx-app", host: "app.example.com"),
-)
-
-kinds = manifest.group_by(&:kind)
-
-kinds.sort.each do |kind, resources|
-  names = resources.map { |r| r.metadata&.name rescue "?" }.compact
-  puts "  %-30s %s" % [kind, names.join(", ")]
-end
-
-manifest.write("manifest.yaml")
+manifest.to_yaml

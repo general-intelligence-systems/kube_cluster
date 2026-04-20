@@ -313,17 +313,17 @@ class DirtyTrackingIntegrationTest < Minitest::Test
   def test_multiple_mutations_coalesce_in_single_patch
     resource, ctl = build_resource(
       metadata: { name: "my-config", namespace: "default" },
-      spec: { host: "db-1", port: "5432", pool: "5" }
+      data: { host: "db-1", port: "5432", pool: "5" }
     )
 
-    data = resource.instance_variable_get(:@data).spec
-    data.host = "db-2"
-    data.port = "5433"
-    data.pool = "10"
+    d = resource.instance_variable_get(:@data).data
+    d.host = "db-2"
+    d.port = "5433"
+    d.pool = "10"
 
     ctl.stub_response("get", server_state(
       metadata: { name: "my-config", namespace: "default" },
-      spec: { host: "db-2", port: "5433", pool: "10" }
+      data: { host: "db-2", port: "5433", pool: "10" }
     ))
 
     resource.patch
@@ -335,9 +335,9 @@ class DirtyTrackingIntegrationTest < Minitest::Test
     payload = JSON.parse(patch_commands.first.split("-p ").last)
 
     # deep_diff produces [old, new] tuples for each changed leaf
-    assert_equal ["db-1", "db-2"], payload["spec"]["host"]
-    assert_equal ["5432", "5433"], payload["spec"]["port"]
-    assert_equal ["5", "10"], payload["spec"]["pool"]
+    assert_equal ["db-1", "db-2"], payload["data"]["host"]
+    assert_equal ["5432", "5433"], payload["data"]["port"]
+    assert_equal ["5", "10"], payload["data"]["pool"]
   end
 
   # -------------------------------------------------------------------------
@@ -371,19 +371,19 @@ class DirtyTrackingIntegrationTest < Minitest::Test
   def test_changes_applied_then_patch_sends_only_subsequent_changes
     resource, ctl = build_resource(
       metadata: { name: "my-config", namespace: "default" },
-      spec: { a: "1", b: "2", c: "3" }
+      data: { a: "1", b: "2", c: "3" }
     )
 
     # First wave of changes
-    resource.instance_variable_get(:@data).spec.a = "changed-a"
+    resource.instance_variable_get(:@data).data.a = "changed-a"
     resource.changes_applied
 
     # Second wave — only b changes from the new baseline
-    resource.instance_variable_get(:@data).spec.b = "changed-b"
+    resource.instance_variable_get(:@data).data.b = "changed-b"
 
     ctl.stub_response("get", server_state(
       metadata: { name: "my-config", namespace: "default" },
-      spec: { a: "changed-a", b: "changed-b", c: "3" }
+      data: { a: "changed-a", b: "changed-b", c: "3" }
     ))
 
     resource.patch
@@ -393,8 +393,8 @@ class DirtyTrackingIntegrationTest < Minitest::Test
 
     # Only b should be in the patch, not a (already accepted via changes_applied)
     # deep_diff produces [old, new] tuples
-    assert_equal ["2", "changed-b"], payload["spec"]["b"]
-    refute payload["spec"].key?("a"), "already-accepted change 'a' should not be in patch"
+    assert_equal ["2", "changed-b"], payload["data"]["b"]
+    refute payload["data"].key?("a"), "already-accepted change 'a' should not be in patch"
   end
 
   # -------------------------------------------------------------------------
@@ -467,22 +467,22 @@ class DirtyTrackingIntegrationTest < Minitest::Test
   end
 
   def test_snapshot_isolation_across_multiple_changes_applied
-    resource, _ctl = build_resource(metadata: { name: "test" }, spec: { counter: "1" })
+    resource, _ctl = build_resource(metadata: { name: "test" }, data: { counter: "1" })
 
-    resource.instance_variable_get(:@data).spec.counter = "2"
+    resource.instance_variable_get(:@data).data.counter = "2"
     snapshot_1_changes = resource.changes
 
     resource.changes_applied
 
-    resource.instance_variable_get(:@data).spec.counter = "3"
+    resource.instance_variable_get(:@data).data.counter = "3"
     snapshot_2_changes = resource.changes
 
     # Each snapshot's changes should be independent
-    assert_equal "1", extract_nested_value(snapshot_1_changes, :spec, :counter, 0)
-    assert_equal "2", extract_nested_value(snapshot_1_changes, :spec, :counter, 1)
+    assert_equal "1", extract_nested_value(snapshot_1_changes, :data, :counter, 0)
+    assert_equal "2", extract_nested_value(snapshot_1_changes, :data, :counter, 1)
 
-    assert_equal "2", extract_nested_value(snapshot_2_changes, :spec, :counter, 0)
-    assert_equal "3", extract_nested_value(snapshot_2_changes, :spec, :counter, 1)
+    assert_equal "2", extract_nested_value(snapshot_2_changes, :data, :counter, 0)
+    assert_equal "3", extract_nested_value(snapshot_2_changes, :data, :counter, 1)
   end
 
   # -------------------------------------------------------------------------

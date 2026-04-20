@@ -36,51 +36,132 @@ class RepoTest < Minitest::Test
     refute repo.oci?
   end
 
-  # ── add / update / remove skip OCI ────────────────────────────────────
+  # ── add / update / remove ────────────────────────────────────────────
 
-  def test_add_returns_nil_for_oci
+  def test_add_returns_self_for_oci
     repo = Kube::Helm::Repo.new("ghcr", url: "oci://ghcr.io/my-org/charts")
-    assert_nil repo.add
+    assert_equal repo, repo.add
   end
 
-  def test_update_returns_nil_for_oci
+  def test_update_returns_self_for_oci
     repo = Kube::Helm::Repo.new("ghcr", url: "oci://ghcr.io/my-org/charts")
-    assert_nil repo.update
+    assert_equal repo, repo.update
   end
 
-  def test_remove_returns_nil_for_oci
+  def test_remove_returns_self_for_oci
     repo = Kube::Helm::Repo.new("ghcr", url: "oci://ghcr.io/my-org/charts")
-    assert_nil repo.remove
+    assert_equal repo, repo.remove
   end
 
-  # ── chart ──────────────────────────────────────────────────────────────
-
-  def test_chart_returns_chart_for_http_repo
+  def test_add_runs_helm_repo_add
     repo = Kube::Helm::Repo.new("bitnami", url: "https://charts.bitnami.com/bitnami")
-    chart = repo.chart("nginx", version: "18.1.0")
 
-    assert_instance_of Kube::Helm::Chart, chart
-    assert_equal "bitnami/nginx", chart.ref
-    assert_equal "18.1.0", chart.version
+    captured_cmd = nil
+    Kube::Helm.stub(:run, ->(cmd) { captured_cmd = cmd; "" }) do
+      result = repo.add
+      assert_equal repo, result
+    end
+
+    assert_includes captured_cmd, "repo"
+    assert_includes captured_cmd, "add"
+    assert_includes captured_cmd, "bitnami"
+    assert_includes captured_cmd, "https://charts.bitnami.com/bitnami"
   end
 
-  def test_chart_returns_chart_for_oci_repo
-    repo = Kube::Helm::Repo.new("ghcr", url: "oci://ghcr.io/my-org/charts")
-    chart = repo.chart("nginx", version: "1.0.0")
-
-    assert_instance_of Kube::Helm::Chart, chart
-    assert_equal "oci://ghcr.io/my-org/charts/nginx", chart.ref
-    assert_equal "1.0.0", chart.version
-  end
-
-  def test_chart_without_version
+  def test_update_runs_helm_repo_update
     repo = Kube::Helm::Repo.new("bitnami", url: "https://charts.bitnami.com/bitnami")
-    chart = repo.chart("nginx")
 
-    assert_nil chart.version
+    captured_cmd = nil
+    Kube::Helm.stub(:run, ->(cmd) { captured_cmd = cmd; "" }) do
+      repo.update
+    end
+
+    assert_includes captured_cmd, "repo"
+    assert_includes captured_cmd, "update"
+    assert_includes captured_cmd, "bitnami"
   end
 
-  # ── cluster: param ──────────────────────────────────────────────────
+  def test_remove_runs_helm_repo_remove
+    repo = Kube::Helm::Repo.new("bitnami", url: "https://charts.bitnami.com/bitnami")
+
+    captured_cmd = nil
+    Kube::Helm.stub(:run, ->(cmd) { captured_cmd = cmd; "" }) do
+      repo.remove
+    end
+
+    assert_includes captured_cmd, "repo"
+    assert_includes captured_cmd, "remove"
+    assert_includes captured_cmd, "bitnami"
+  end
+
+  # ── fetch ────────────────────────────────────────────────────────────
+
+  def test_fetch_returns_chart_with_metadata
+    repo = Kube::Helm::Repo.new("bitnami", url: "https://charts.bitnami.com/bitnami")
+
+    stub_chart_yaml = {
+      "name" => "nginx",
+      "version" => "18.1.0",
+      "appVersion" => "1.25.0",
+    }.to_yaml
+
+    captured_cmds = []
+    Kube::Helm.stub(:run, ->(cmd) {
+      captured_cmds << cmd
+      cmd.include?("show") ? stub_chart_yaml : ""
+    }) do
+      chart = repo.fetch("nginx", version: "18.1.0")
+
+      assert_instance_of Kube::Helm::Chart, chart
+      assert_equal "nginx", chart.name
+      assert_equal "18.1.0", chart.version
+      assert_equal "1.25.0", chart.app_version
+      assert_equal "bitnami/nginx", chart.ref
+      assert_nil chart.path
+    end
+
+    # Should have run: repo add, repo update, show chart
+    show_cmd = captured_cmds.find { |c| c.include?("show") && c.include?("chart") }
+    assert show_cmd, "Expected a show chart command"
+    assert_includes show_cmd, "bitnami/nginx"
+    assert_includes show_cmd, "--version=18.1.0"
+  end
+
+  def test_fetch_without_version
+    repo = Kube::Helm::Repo.new("bitnami", url: "https://charts.bitnami.com/bitnami")
+
+    stub_chart_yaml = { "name" => "nginx", "version" => "18.1.0" }.to_yaml
+
+    captured_cmds = []
+    Kube::Helm.stub(:run, ->(cmd) {
+      captured_cmds << cmd
+      cmd.include?("show") ? stub_chart_yaml : ""
+    }) do
+      chart = repo.fetch("nginx")
+      assert_instance_of Kube::Helm::Chart, chart
+      assert_nil chart.path
+    end
+
+    show_cmd = captured_cmds.find { |c| c.include?("show") && c.include?("chart") }
+    refute_includes show_cmd, "--version"
+  end
+
+  def test_fetch_propagates_cluster
+    cluster = Kube::Cluster.connect(kubeconfig: "/tmp/test-kubeconfig")
+    repo = Kube::Helm::Repo.new("bitnami", url: "https://charts.bitnami.com/bitnami", cluster: cluster)
+
+    stub_chart_yaml = { "name" => "nginx", "version" => "18.1.0" }.to_yaml
+
+    cluster.connection.helm.stub(:run, ->(cmd) {
+      cmd.include?("show") ? stub_chart_yaml : ""
+    }) do
+      chart = repo.fetch("nginx", version: "18.1.0")
+      assert_equal cluster, chart.cluster
+      assert_equal "bitnami/nginx", chart.ref
+    end
+  end
+
+  # ── cluster scoping ──────────────────────────────────────────────────
 
   def test_initializes_without_cluster
     repo = Kube::Helm::Repo.new("bitnami", url: "https://charts.bitnami.com/bitnami")
@@ -93,19 +174,18 @@ class RepoTest < Minitest::Test
     assert_equal cluster, repo.cluster
   end
 
-  def test_chart_propagates_cluster
+  def test_add_uses_cluster_helm_instance
     cluster = Kube::Cluster.connect(kubeconfig: "/tmp/test-kubeconfig")
     repo = Kube::Helm::Repo.new("bitnami", url: "https://charts.bitnami.com/bitnami", cluster: cluster)
-    chart = repo.chart("nginx", version: "18.1.0")
 
-    assert_equal cluster, chart.cluster
-  end
+    captured_cmd = nil
+    cluster.connection.helm.stub(:run, ->(cmd) { captured_cmd = cmd; "" }) do
+      repo.add
+    end
 
-  def test_chart_without_cluster_has_nil_cluster
-    repo = Kube::Helm::Repo.new("bitnami", url: "https://charts.bitnami.com/bitnami")
-    chart = repo.chart("nginx")
-
-    assert_nil chart.cluster
+    assert_includes captured_cmd, "repo"
+    assert_includes captured_cmd, "add"
+    assert_includes captured_cmd, "bitnami"
   end
 
   # ── to_s ──────────────────────────────────────────────────────────────

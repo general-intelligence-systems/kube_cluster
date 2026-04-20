@@ -3,20 +3,15 @@ require "kube/cluster"
 
 # Helm Chart → Manifest
 #
-# Renders the Bitnami nginx chart into typed Ruby objects
+# Fetches the Bitnami nginx chart, renders it with values,
 # and writes the result as YAML.
 
-repo = Kube::Helm::Repo
+manifest = Kube::Helm::Repo
   .new("bitnami", url: "https://charts.bitnami.com/bitnami")
-  .add
-  .update
+  .fetch("nginx", version: "18.1.0")
+  .apply_values({
+    "replicaCount" => 3,
+    "service"      => { "type" => "ClusterIP" },
+  })
 
-repo.chart("nginx", version: "18.1.0")
-  .template(
-    release:   "my-nginx",
-    namespace: "production",
-    values: {
-      "replicaCount" => 3,
-      "service"      => { "type" => "ClusterIP" },
-    }
-  ).write("manifest.yaml")
+manifest.write("manifest.yaml")

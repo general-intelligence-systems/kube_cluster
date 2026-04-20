@@ -32,11 +32,13 @@ module Kube
       @resource_classes[kind] ||= begin
         schema_class = Kube::Schema[kind]
         Class.new(Resource) do
-          @schema   = schema_class.schema
-          @defaults = schema_class.defaults
+          @schema            = schema_class.schema
+          @defaults          = schema_class.defaults
+          @schema_properties = schema_class.schema_properties
 
-          def self.schema   = @schema   || superclass.schema
-          def self.defaults = @defaults || superclass.defaults
+          def self.schema            = @schema            || superclass.schema
+          def self.defaults          = @defaults          || superclass.defaults
+          def self.schema_properties = @schema_properties || superclass.schema_properties
         end
       end
     end

@@ -41,7 +41,13 @@ module Kube
         super
         snapshot!
 
-        extend Extensions.const_get(kind) if Extensions.const_defined?(kind)
+        begin
+          extend Object.const_get(
+            "Kube::Cluster::Resource::Extensions::#{kind}"
+          )
+        rescue
+          nil
+        end
       end
 
       # Build a new resource of the same schema subclass from a hash.
