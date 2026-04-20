@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+docker compose up -d
+
+bundle exec ruby manifest.rb
+kubectl apply -f manifest.yaml
