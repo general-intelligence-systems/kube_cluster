@@ -13,7 +13,7 @@ RUN apt-get update -qq && \
 COPY Gemfile ./
 RUN bundle install
 
-COPY config.ru ./
+COPY config.ru falcon.rb ./
 
 EXPOSE 3000
-CMD ["bundle", "exec", "falcon", "serve", "--bind", "http://0.0.0.0:3000"]
+CMD ["bundle", "exec", "falcon", "host"]
