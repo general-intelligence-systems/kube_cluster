@@ -3,7 +3,7 @@ require "kube/cluster"
 
 APP_NAME        = "my-app"
 FULLNAME        = "my-app"
-IMAGE           = "my-app:latest"
+IMAGE           = "registry:5000/my-app:latest"
 MATCH_LABELS    = { app: APP_NAME }
 STANDARD_LABELS = { app: APP_NAME, version: "1.0" }
 RESOURCES       = { requests: { cpu: "100m", memory: "128Mi" }, limits: { cpu: "500m", memory: "256Mi" } }

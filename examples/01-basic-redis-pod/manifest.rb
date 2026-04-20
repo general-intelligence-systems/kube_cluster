@@ -3,7 +3,7 @@ require "kube/cluster"
 
 class RedisPod < Kube::Cluster['Pod']
   def initialize(container_name: 'my-redis-container', **options, &block)
-    super(**options) {
+    super {
       spec.containers = [
         {
           name: container_name,

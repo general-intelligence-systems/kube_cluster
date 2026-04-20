@@ -1,0 +1,10 @@
+# frozen_string_literal: true
+
+source 'https://rubygems.org'
+
+
+gem "metatron", "~> 0.11.3"
+gem "falcon", "~> 0.55.3"
+gem "logger", "~> 1.7"
+
+gem "kube_cluster", "~> 0.3.2"

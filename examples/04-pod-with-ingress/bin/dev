@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+docker compose up -d
+
+docker build -t localhost:5000/myapp:v1 .
+docker push localhost:5000/myapp:v1
+
+kubectl delete pod my-app
+bundle exec ruby manifest.rb > manifest.yaml
+kubectl apply -f manifest.yaml

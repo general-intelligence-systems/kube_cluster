@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+docker compose up -d
+
+kubectl create configmap example-redis-config --from-file=redis.conf --dry-run=client -o yaml | kubectl apply -f -
+
+bundle exec ruby manifest.rb > manifest.yaml
+kubectl apply -f manifest.yaml

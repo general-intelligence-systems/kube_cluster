@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+docker compose up -d
+
+docker build -t localhost:5000/my-app:latest .
+docker push localhost:5000/my-app:latest
+
+bundle exec ruby manifest.rb > manifest.yaml
+kubectl apply -f manifest.yaml
