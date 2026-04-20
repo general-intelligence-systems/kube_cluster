@@ -2,6 +2,6 @@
 
 module Kube
   module Cluster
-    VERSION = "0.3.5"
+    VERSION = "0.3.7"
   end
 end

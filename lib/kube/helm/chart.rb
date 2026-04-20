@@ -80,7 +80,7 @@ module Kube
         source_ref = source
         ver = version_flag
 
-        cmd = helm.call { template.(release_name).(source_ref) }
+        cmd = helm.call { template.(release_name).(source_ref).include_crds(true) }
         cmd = cmd.version(ver) if ver
         cmd = cmd.namespace(namespace) if namespace
 
@@ -148,7 +148,7 @@ module Kube
           ver = version_flag
           release_name = name || "crds"
 
-          cmd = helm.call { template.(release_name).(source_ref) }
+        cmd = helm.call { template.(release_name).(source_ref).include_crds(true) }
           cmd = cmd.version(ver) if ver
           cmd = cmd.set("installCRDs=true")
 
