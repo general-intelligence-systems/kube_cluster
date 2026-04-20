@@ -4,18 +4,6 @@ require "test_helper"
 require "json"
 
 # ---------------------------------------------------------------------------
-# Test resource subclass that wires up the methods Persistence expects
-# (resource_type, name, ns_flags, persisted?) which the base Resource
-# deliberately leaves to consumers.
-# ---------------------------------------------------------------------------
-class TestConfigMap < Kube::Cluster::Resource
-  def resource_type = "configmap"
-  def name          = to_h.dig(:metadata, :name)&.to_s
-  def ns_flags      = to_h.dig(:metadata, :namespace) ? ["--namespace", to_h.dig(:metadata, :namespace).to_s] : []
-  def persisted?    = !name.nil? && !name.empty?
-end
-
-# ---------------------------------------------------------------------------
 # Fake ctl that records every command and returns canned responses.
 # The test wires this into the cluster → connection → ctl chain so that
 # Persistence#kubectl goes through it without touching a real cluster.
@@ -72,7 +60,7 @@ module ResourceHelper
   def build_resource(hash = {})
     ctl     = FakeCtl.new
     cluster = FakeCluster.new(ctl)
-    resource = TestConfigMap.new(hash.merge(cluster: cluster))
+    resource = Kube::Cluster["ConfigMap"].new(hash.merge(kind: "ConfigMap", cluster: cluster))
     [resource, ctl]
   end
 

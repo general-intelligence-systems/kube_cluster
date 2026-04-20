@@ -7,6 +7,14 @@ module Kube
   module Cluster
     class Resource < Kube::Schema::Resource
       module Persistence
+        def name
+          to_h.dig(:metadata, :name)&.to_s
+        end
+
+        def persisted?
+          !name.nil? && !name.empty?
+        end
+
         def apply
           JSON.generate(deep_stringify_keys(to_h)).then do |json|
             kubectl("apply", "-f", "-", stdin: json)
@@ -23,7 +31,7 @@ module Kube
               false
             else
               json = JSON.generate(deep_stringify_keys(diff))
-              kubectl("patch", resource_type, name, *ns_flags, "--type", type, "-p", json)
+              kubectl("patch", kind.downcase, name, *namespace_flags, "--type", type, "-p", json)
               reload
               true
             end
@@ -34,7 +42,7 @@ module Kube
 
         def delete
           if persisted?
-            kubectl("delete", resource_type, name, *ns_flags)
+            kubectl("delete", kind.downcase, name, *namespace_flags)
             true
           else
             raise Kube::CommandError, "cannot delete a resource without a name"
@@ -44,7 +52,7 @@ module Kube
         def reload
           if persisted?
             tap do
-              kubectl("get", resource_type, name, *ns_flags, "-o", "json").then do |json|
+              kubectl("get", kind.downcase, name, *namespace_flags, "-o", "json").then do |json|
                 JSON.parse(json).then do |hash|
                   @data = deep_symbolize_keys(hash)
                   snapshot!
@@ -57,6 +65,11 @@ module Kube
         end
 
         private
+
+          def namespace_flags
+            ns = to_h.dig(:metadata, :namespace)
+            ns ? ["--namespace", ns.to_s] : []
+          end
 
           def kubectl(*args)
             @cluster.connection.ctl.run(args.join(" "))

@@ -6,7 +6,6 @@ require_relative "cluster/version"
 require_relative "cluster/connection"
 require_relative "cluster/instance"
 require_relative "cluster/resource"
-require_relative "cluster/custom_resource_definition"
 require_relative "cluster/manifest"
 require_relative "cluster/middleware"
 require 'kube/ctl'

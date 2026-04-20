@@ -2,6 +2,7 @@
 
 require_relative "resource/dirty_tracking"
 require_relative "resource/persistence"
+require_relative "resource/extensions/custom_resource_definition"
 
 module Kube
   module Cluster
@@ -39,6 +40,8 @@ module Kube
         @cluster = hash.delete(:cluster)
         super
         snapshot!
+
+        extend Extensions.const_get(kind) if Extensions.const_defined?(kind)
       end
 
       # Build a new resource of the same schema subclass from a hash.
