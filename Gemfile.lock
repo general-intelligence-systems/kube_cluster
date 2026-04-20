@@ -11,14 +11,14 @@ PATH
 PATH
   remote: ../schema
   specs:
-    kube_schema (1.3.3)
+    kube_schema (1.3.4)
       json_schemer (~> 2.5.0)
       rubyshell (~> 1.5.0)
 
 PATH
   remote: .
   specs:
-    kube_cluster (0.3.2)
+    kube_cluster (0.3.4)
       kube_kubectl (~> 2.0.0)
       kube_schema (~> 1.3.0)
 

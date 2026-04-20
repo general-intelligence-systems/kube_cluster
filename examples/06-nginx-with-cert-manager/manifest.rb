@@ -42,4 +42,4 @@ manifest =
     SelfSignedIssuer.new,
   )
 
-manifest.to_yaml
+puts manifest.to_yaml
