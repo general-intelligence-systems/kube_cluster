@@ -33,5 +33,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rubocop", "~> 1.21"
 
   spec.add_dependency "kube_schema", "~> 1.3.0"
-  spec.add_dependency "kube_kubectl", "~> 2.0.0"
+  spec.add_dependency "kube_kubectl", "~> 2.0.9"
 end
