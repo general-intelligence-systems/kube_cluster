@@ -1,16 +1,3 @@
-#!/usr/bin/env ruby
-# frozen_string_literal: true
+#!/usr/bin/env bash
 
-Dir.chdir(File.expand_path("..", __dir__))
-
-if ARGV.empty?
-  files = Dir.glob("lib/**/*.rb").sort.select { |f|
-    File.read(f).include?("if __FILE__ == $0")
-  }
-else
-  files = ARGV
-end
-
-files.each do |f|
-  system("bundle", "exec", "ruby", f, exception: true)
-end
+bundle exec scampi $@

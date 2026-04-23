@@ -6,8 +6,8 @@ require_relative "cluster/version"
 require_relative "cluster/connection"
 require_relative "cluster/instance"
 require_relative "cluster/resource"
-require_relative "cluster/manifest"
 require_relative "cluster/middleware"
+require_relative "cluster/manifest"
 require 'kube/ctl'
 require_relative 'helm/repo'
 
@@ -45,13 +45,8 @@ module Kube
   end
 end
 
-if __FILE__ == $0
-  require "bundler/setup"
-  require "minitest/autorun"
-
-  class KubeClusterTest < Minitest::Test
-    def test_version
-      refute_nil Kube::Cluster::VERSION
-    end
+test do
+  it "version" do
+    Kube::Cluster::VERSION.should.not.be.nil
   end
 end
