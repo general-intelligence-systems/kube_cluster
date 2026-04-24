@@ -3,7 +3,7 @@ PATH
   specs:
     kube_cluster (0.4.1)
       kube_kubectl (~> 2.0.9)
-      kube_schema (~> 1.4.0)
+      kube_schema (~> 1.4.1)
       scampi (~> 0.1)
 
 GEM
@@ -38,12 +38,12 @@ GEM
       rubyshell (~> 1.5)
       shellwords (~> 0.2.2)
       string_builder (~> 1.2.2)
-    kube_schema (1.4.0)
+    kube_schema (1.4.1)
       json_schemer (~> 2.5.0)
       rubyshell (~> 1.5.0)
     language_server-protocol (3.17.0.5)
     lint_roller (1.1.0)
-    parallel (2.0.1)
+    parallel (2.1.0)
     parser (3.3.11.1)
       ast (~> 2.4.1)
       racc
