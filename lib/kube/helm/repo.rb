@@ -46,13 +46,13 @@ module Kube
       #
       # @return [self]
       def add
-        if endpoint.requires_add?
-          repo_name = @name
-          repo_url = endpoint.url
-          cmd = helm.call { repo.add.(repo_name).(repo_url) }
-          helm.run(cmd.to_s)
+        tap do
+          if endpoint.requires_add?
+            helm.run(
+              helm.call { repo.add.(@name).(endpoint.url) }.to_s
+            )
+          end
         end
-        self
       end
 
       # Update the local chart index for this repo.
@@ -60,12 +60,13 @@ module Kube
       #
       # @return [self]
       def update
-        if endpoint.requires_add?
-          repo_name = @name
-          cmd = helm.call { repo.update.(repo_name) }
-          helm.run(cmd.to_s)
+        tap do
+          if endpoint.requires_add?
+            helm.run(
+              helm.call { repo.update.(@name) }.to_s
+            )
+          end
         end
-        self
       end
 
       # Remove this repo from the local Helm client.
@@ -73,12 +74,13 @@ module Kube
       #
       # @return [self]
       def remove
-        if endpoint.requires_add?
-          repo_name = @name
-          cmd = helm.call { repo.remove.(repo_name) }
-          helm.run(cmd.to_s)
+        tap do
+          if endpoint.requires_add?
+            helm.run(
+              helm.call { repo.remove.(@name) }.to_s
+            )
+          end
         end
-        self
       end
 
       # Fetch a chart from this repo.
@@ -96,12 +98,19 @@ module Kube
 
         ref = endpoint.chart_ref(chart_name, repo_name: @name)
 
-        cmd = helm.call { show.chart.(ref) }
-        cmd = cmd.version(version) if version
-        yaml_output = helm.run(cmd.to_s)
-
-        data = YAML.safe_load(yaml_output, permitted_classes: [Symbol]) || {}
-        Chart.new(data, ref: ref, cluster: @cluster)
+        helm.run(
+          helm.call {
+            if version
+              show.chart.(ref).version(version)
+            else
+              show.chart.(ref)
+            end
+          }.to_s
+        ).then do |yaml_output|
+          (YAML.safe_load(yaml_output, permitted_classes: [Symbol]) || {}).then do |data|
+            Chart.new(data, ref: ref, cluster: @cluster)
+          end
+        end
       end
 
       # Is this an OCI-backed repo?

@@ -23,6 +23,31 @@ module Kube
     #
     class Manifest < Kube::Schema::Manifest
       attr_reader :resources
+
+      # Override << to automatically upgrade Kube::Schema::Resource
+      # instances into Kube::Cluster::Resource instances. This ensures
+      # resources parsed via Kube::Schema::Manifest (e.g. from Helm
+      # charts or downloaded YAML) gain cluster-level methods like
+      # cluster_scoped?, pod_bearing?, and rebuild when composed into
+      # a cluster manifest.
+      def <<(item)
+        case item
+        when Kube::Cluster::Resource
+          @resources << item
+        when Kube::Schema::Resource
+          @resources << Kube::Cluster[item.kind].new(item.to_h)
+        when Kube::Schema::Manifest
+          item.each { |r| self << r }
+        when Array
+          item.each { |r| self << r }
+        else
+          raise ArgumentError,
+            "Expected a Kube::Schema::Resource or Manifest, got #{item.class}. " \
+            "Use Kube::Schema.parse(hash) to convert hashes."
+        end
+
+        self
+      end
     end
   end
 end
