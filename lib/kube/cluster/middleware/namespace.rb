@@ -14,18 +14,20 @@ module Kube
       #   end
       #
       class Namespace < Middleware
-        def initialize(namespace)
+        def initialize(namespace, filter: DEFAULT_FILTER)
+          super(filter: filter)
           @namespace = namespace
         end
 
         def call(manifest)
           manifest.resources.map! do |resource|
-            next resource if resource.cluster_scoped?
-
-            h = resource.to_h
-            h[:metadata] ||= {}
-            h[:metadata][:namespace] = @namespace
-            resource.rebuild(h)
+            filter(resource) do
+              next resource if resource.cluster_scoped?
+              h = resource.to_h
+              h[:metadata] ||= {}
+              h[:metadata][:namespace] = @namespace
+              resource.rebuild(h)
+            end
           end
         end
       end
@@ -89,18 +91,17 @@ test do
 
   it "returns_new_resource_instance" do
     resource = Kube::Cluster["ConfigMap"].new { metadata.name = "test" }
-    m = manifest(resource)
-
-    Middleware::Namespace.new("production").call(m)
-
-    resource.equal?(m.resources.first).should.be.false
+    manifest(resource).tap do |m|
+      Middleware::Namespace.new("production").call(m)
+      resource.equal?(m.resources.first).should.be.false
+    end
   end
 
   private
 
     def manifest(*resources)
-      m = Kube::Cluster::Manifest.new
-      resources.each { |r| m << r }
-      m
+      Kube::Cluster::Manifest.new.tap do |manifest|
+        resources.each { |x| manifest << x }
+      end
     end
 end

@@ -35,16 +35,16 @@ module Kube
           managed_by: :"app.kubernetes.io/managed-by",
         }.freeze
 
-        def initialize(**labels)
-          @labels = normalize(labels)
-        end
-
         def call(manifest)
+          labels = normalize(@opts)
+
           manifest.resources.map! do |resource|
-            h = resource.to_h
-            h[:metadata] ||= {}
-            h[:metadata][:labels] = @labels.merge(h[:metadata][:labels] || {})
-            resource.rebuild(h)
+            filter(resource) do
+              h = resource.to_h
+              h[:metadata] ||= {}
+              h[:metadata][:labels] = labels.merge(h[:metadata][:labels] || {})
+              resource.rebuild(h)
+            end
           end
         end
 

@@ -41,24 +41,26 @@ module Kube
 
         def call(manifest)
           manifest.resources.map! do |resource|
-            size = resource.label(LABEL)
-            next resource unless size
-            next resource unless resource.pod_bearing?
+            filter(resource) do
+              size = resource.label(LABEL)
+              next resource unless size
+              next resource unless resource.pod_bearing?
 
-            preset = PRESETS.fetch(size.to_s) do
-              raise ArgumentError, "Unknown size preset: #{size.inspect}. " \
-                "Valid sizes: #{PRESETS.keys.join(', ')}"
+              preset = PRESETS.fetch(size.to_s) do
+                raise ArgumentError, "Unknown size preset: #{size.inspect}. " \
+                  "Valid sizes: #{PRESETS.keys.join(', ')}"
+              end
+
+              h = resource.to_h
+              pod_spec = resource.pod_template(h)
+              next resource unless pod_spec
+
+              resource.each_container(pod_spec) do |container|
+                container[:resources] = deep_merge(preset, container[:resources] || {})
+              end
+
+              resource.rebuild(h)
             end
-
-            h = resource.to_h
-            pod_spec = resource.pod_template(h)
-            next resource unless pod_spec
-
-            resource.each_container(pod_spec) do |container|
-              container[:resources] = deep_merge(preset, container[:resources] || {})
-            end
-
-            resource.rebuild(h)
           end
         end
       end

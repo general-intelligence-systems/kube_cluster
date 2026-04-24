@@ -28,62 +28,56 @@ module Kube
       class IngressForService < Middleware
         LABEL = :"app.kubernetes.io/expose"
 
-        def initialize(issuer: "letsencrypt-prod", ingress_class: "nginx")
-          @issuer = issuer
-          @ingress_class = ingress_class
-        end
-
         def call(manifest)
           generated = []
+          issuer        = @opts.fetch(:issuer, "letsencrypt-prod")
+          ingress_class = @opts.fetch(:ingress_class, "nginx")
 
           manifest.resources.each do |resource|
-            next unless resource.kind == "Service"
+            filter(resource) do
+              next unless resource.kind == "Service"
 
-            host = resource.label(LABEL)
-            next unless host
+              host = resource.label(LABEL)
+              next unless host
 
-            h = resource.to_h
-            name      = h.dig(:metadata, :name)
-            namespace = h.dig(:metadata, :namespace)
-            labels    = h.dig(:metadata, :labels) || {}
+              h = resource.to_h
+              name      = h.dig(:metadata, :name)
+              namespace = h.dig(:metadata, :namespace)
+              labels    = h.dig(:metadata, :labels) || {}
 
-            # Find the first port on the service
-            port_name = Array(h.dig(:spec, :ports)).first&.dig(:name) || "http"
+              # Find the first port on the service
+              port_name = Array(h.dig(:spec, :ports)).first&.dig(:name) || "http"
 
-            # Use resource name as hostname fallback if label is just "true"
-            host = "#{name}.local" if host == "true"
+              # Use resource name as hostname fallback if label is just "true"
+              host = "#{name}.local" if host == "true"
 
-            # Capture ivars as locals — the block runs via instance_exec
-            # on a BlackHoleStruct, so @ivars would resolve on the BHS.
-            issuer        = @issuer
-            ingress_class = @ingress_class
+              generated << Kube::Cluster["Ingress"].new {
+                metadata.name      = name
+                metadata.namespace = namespace if namespace
+                metadata.labels    = labels.reject { |k, _| k == LABEL }
+                metadata.annotations = {
+                  "cert-manager.io/cluster-issuer":           issuer,
+                  "nginx.ingress.kubernetes.io/ssl-redirect": "true",
+                }
 
-            generated << Kube::Cluster["Ingress"].new {
-              metadata.name      = name
-              metadata.namespace = namespace if namespace
-              metadata.labels    = labels.reject { |k, _| k == LABEL }
-              metadata.annotations = {
-                "cert-manager.io/cluster-issuer":           issuer,
-                "nginx.ingress.kubernetes.io/ssl-redirect": "true",
-              }
-
-              spec.ingressClassName = ingress_class
-              spec.tls = [
-                { hosts: [host], secretName: "#{name}-tls" },
-              ]
-              spec.rules = [
-                {
-                  host: host,
-                  http: {
-                    paths: [{
-                      path:     "/",
-                      pathType: "Prefix",
-                      backend:  { service: { name: name, port: { name: port_name } } },
-                    }],
+                spec.ingressClassName = ingress_class
+                spec.tls = [
+                  { hosts: [host], secretName: "#{name}-tls" },
+                ]
+                spec.rules = [
+                  {
+                    host: host,
+                    http: {
+                      paths: [{
+                        path:     "/",
+                        pathType: "Prefix",
+                        backend:  { service: { name: name, port: { name: port_name } } },
+                      }],
+                    },
                   },
-                },
-              ]
-            }
+                ]
+              }
+            end
           end
 
           manifest.resources.concat(generated)

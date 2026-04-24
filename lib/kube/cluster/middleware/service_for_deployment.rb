@@ -25,30 +25,32 @@ module Kube
           generated = []
 
           manifest.resources.each do |resource|
-            next unless resource.pod_bearing?
+            filter(resource) do
+              next unless resource.pod_bearing?
 
-            h = resource.to_h
-            ports = extract_ports(resource, h)
-            next if ports.empty?
+              h = resource.to_h
+              ports = extract_ports(resource, h)
+              next if ports.empty?
 
-            match_labels = h.dig(:spec, :selector, :matchLabels)
-            next unless match_labels && !match_labels.empty?
+              match_labels = h.dig(:spec, :selector, :matchLabels)
+              next unless match_labels && !match_labels.empty?
 
-            generated << Kube::Cluster["Service"].new {
-              metadata.name      = h.dig(:metadata, :name)
-              metadata.namespace = h.dig(:metadata, :namespace) if h.dig(:metadata, :namespace)
-              metadata.labels    = h.dig(:metadata, :labels) || {}
+              generated << Kube::Cluster["Service"].new {
+                metadata.name      = h.dig(:metadata, :name)
+                metadata.namespace = h.dig(:metadata, :namespace) if h.dig(:metadata, :namespace)
+                metadata.labels    = h.dig(:metadata, :labels) || {}
 
-              spec.selector = match_labels
-              spec.ports = ports.map { |p|
-                {
-                  name:       p[:name],
-                  port:       p[:containerPort],
-                  targetPort: p[:name],
-                  protocol:   p.fetch(:protocol, "TCP"),
+                spec.selector = match_labels
+                spec.ports = ports.map { |p|
+                  {
+                    name:       p[:name],
+                    port:       p[:containerPort],
+                    targetPort: p[:name],
+                    protocol:   p.fetch(:protocol, "TCP"),
+                  }
                 }
               }
-            }
+            end
           end
 
           manifest.resources.concat(generated)

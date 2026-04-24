@@ -22,40 +22,40 @@ module Kube
       #   end
       #
       class PodAntiAffinity < Middleware
-        def initialize(topology_key: "kubernetes.io/hostname", weight: 1)
-          @topology_key = topology_key
-          @weight = weight
-        end
-
         def call(manifest)
+          topology_key = @opts.fetch(:topology_key, "kubernetes.io/hostname")
+          weight = @opts.fetch(:weight, 1)
+
           manifest.resources.map! do |resource|
-            next resource unless resource.pod_bearing?
+            filter(resource) do
+              next resource unless resource.pod_bearing?
 
-            h = resource.to_h
-            pod_spec = resource.pod_template(h)
-            next resource unless pod_spec
+              h = resource.to_h
+              pod_spec = resource.pod_template(h)
+              next resource unless pod_spec
 
-            # Don't overwrite existing affinity configuration.
-            next resource if pod_spec[:affinity]
+              # Don't overwrite existing affinity configuration.
+              next resource if pod_spec[:affinity]
 
-            match_labels = h.dig(:spec, :selector, :matchLabels)
-            next resource unless match_labels && !match_labels.empty?
+              match_labels = h.dig(:spec, :selector, :matchLabels)
+              next resource unless match_labels && !match_labels.empty?
 
-            pod_spec[:affinity] = {
-              podAntiAffinity: {
-                preferredDuringSchedulingIgnoredDuringExecution: [
-                  {
-                    weight: @weight,
-                    podAffinityTerm: {
-                      labelSelector: { matchLabels: match_labels },
-                      topologyKey: @topology_key,
+              pod_spec[:affinity] = {
+                podAntiAffinity: {
+                  preferredDuringSchedulingIgnoredDuringExecution: [
+                    {
+                      weight: weight,
+                      podAffinityTerm: {
+                        labelSelector: { matchLabels: match_labels },
+                        topologyKey: topology_key,
+                      },
                     },
-                  },
-                ],
-              },
-            }
+                  ],
+                },
+              }
 
-            resource.rebuild(h)
+              resource.rebuild(h)
+            end
           end
         end
       end

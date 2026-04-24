@@ -17,16 +17,16 @@ module Kube
       #   end
       #
       class Annotations < Middleware
-        def initialize(**annotations)
-          @annotations = annotations.transform_keys(&:to_sym).transform_values(&:to_s)
-        end
-
         def call(manifest)
+          annotations = @opts.transform_keys(&:to_sym).transform_values(&:to_s)
+
           manifest.resources.map! do |resource|
-            h = resource.to_h
-            h[:metadata] ||= {}
-            h[:metadata][:annotations] = @annotations.merge(h[:metadata][:annotations] || {})
-            resource.rebuild(h)
+            filter(resource) do
+              h = resource.to_h
+              h[:metadata] ||= {}
+              h[:metadata][:annotations] = annotations.merge(h[:metadata][:annotations] || {})
+              resource.rebuild(h)
+            end
           end
         end
       end

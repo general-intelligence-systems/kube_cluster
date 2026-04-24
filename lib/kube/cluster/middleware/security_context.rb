@@ -54,31 +54,31 @@ module Kube
           },
         }.freeze
 
-        def initialize(default: :restricted)
-          @default = default.to_s
-        end
-
         def call(manifest)
+          default = @opts.fetch(:default, :restricted).to_s
+
           manifest.resources.map! do |resource|
-            next resource unless resource.pod_bearing?
+            filter(resource) do
+              next resource unless resource.pod_bearing?
 
-            profile_name = resource.label(LABEL) || @default
-            profile = PROFILES.fetch(profile_name.to_s) do
-              raise ArgumentError, "Unknown security profile: #{profile_name.inspect}. " \
-                "Valid profiles: #{PROFILES.keys.join(', ')}"
+              profile_name = resource.label(LABEL) || default
+              profile = PROFILES.fetch(profile_name.to_s) do
+                raise ArgumentError, "Unknown security profile: #{profile_name.inspect}. " \
+                  "Valid profiles: #{PROFILES.keys.join(', ')}"
+              end
+
+              h = resource.to_h
+              pod_spec = resource.pod_template(h)
+              next resource unless pod_spec
+
+              pod_spec[:securityContext] = deep_merge(profile[:pod], pod_spec[:securityContext] || {})
+
+              resource.each_container(pod_spec) do |container|
+                container[:securityContext] = deep_merge(profile[:container], container[:securityContext] || {})
+              end
+
+              resource.rebuild(h)
             end
-
-            h = resource.to_h
-            pod_spec = resource.pod_template(h)
-            next resource unless pod_spec
-
-            pod_spec[:securityContext] = deep_merge(profile[:pod], pod_spec[:securityContext] || {})
-
-            resource.each_container(pod_spec) do |container|
-              container[:securityContext] = deep_merge(profile[:container], container[:securityContext] || {})
-            end
-
-            resource.rebuild(h)
           end
         end
       end
