@@ -1,3 +1,14 @@
+<!--
+
+Mate... I have no idea what the fuck this file is..... or who made it....
+I really can't be arsed to read it either....
+
+Someone please read it and let me know what the fuck it is...
+
+-- Nathan K. 2026-05-01
+
+-->
+
 # Resource Extensions
 
 Modules in this directory are dynamically mixed into `Kube::Cluster::Resource` instances at initialization time (via `extend`).

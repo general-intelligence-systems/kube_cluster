@@ -3,12 +3,6 @@
 require "kube/schema"
 require_relative "../kube/errors"
 require_relative "cluster/version"
-require_relative "cluster/connection"
-require_relative "cluster/instance"
-require_relative "cluster/resource"
-require_relative "cluster/container"
-require_relative "cluster/middleware"
-require_relative "cluster/manifest"
 require 'kube/ctl'
 require_relative 'helm/repo'
 
@@ -46,8 +40,11 @@ module Kube
   end
 end
 
-test do
-  it "version" do
-    Kube::Cluster::VERSION.should.not.be.nil
-  end
+require "kube/cluster/middleware"
+require "kube/cluster/resource/dirty_tracking"
+require "kube/cluster/resource/persistence"
+
+Dir.glob("#{__dir__}/cluster/**/*.rb").sort.each do |path|
+  require path
 end
+

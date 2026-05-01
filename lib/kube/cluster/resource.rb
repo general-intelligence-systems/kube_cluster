@@ -1,8 +1,10 @@
 # frozen_string_literal: true
 
-require_relative "resource/dirty_tracking"
-require_relative "resource/persistence"
-require_relative "resource/extensions/custom_resource_definition"
+#require_relative "resource/dirty_tracking"
+#require_relative "resource/persistence"
+#require_relative "resource/extensions/custom_resource_definition"
+require "bundler/setup"
+require "kube/cluster"
 
 module Kube
   module Cluster
@@ -52,7 +54,25 @@ module Kube
 
       # Build a new resource of the same schema subclass from a hash.
       def rebuild(hash = {})
-        self.class.new(**hash)
+        # self.class.new(**hash) would throw an error if you do something like this:
+        #
+        # class ExampleServiceSubclass < Kube::Cluster["Service"]
+        #   def initialize(name:, port:, **options, &block)
+        #     super() {
+        #       metadata.name = name
+        #       metadata.labels = { "app" => name }
+        #       spec.selector = { "app" => name }
+        #       spec.ports = [{ port: port, targetPort: port, protocol: "TCP" }]
+        #       instance_exec(&block) if block_given?
+        #     }
+        #   end
+        # end
+        #
+        # Therefore we must make sure that we're rebuilding from the 
+        # initial schema object instead...
+        #
+        Kube::Schema[hash.delete(:kind).to_s].new(**hash)
+        #self.class.new(**hash)
       end
 
       # Read a label value from the resource.
@@ -103,6 +123,28 @@ module Kube
         end
       end
 
+    end
+  end
+end
+
+test do
+  class ExampleServiceSubclass < Kube::Cluster["Service"]
+    def initialize(name:, port:, **options, &block)
+      super() {
+        metadata.name = name
+        metadata.labels = { "app" => name }
+        spec.selector = { "app" => name }
+        spec.ports = [{ port: port, targetPort: port, protocol: "TCP" }]
+
+        instance_exec(&block) if block_given?
+      }
+
+    end
+  end
+
+  it "rebuilds properly" do
+    ExampleServiceSubclass.new(name: "example-service", port: 3000).tap do |service|
+      lambda{ service.rebuild(**service.to_h) }.should.not.raise
     end
   end
 end

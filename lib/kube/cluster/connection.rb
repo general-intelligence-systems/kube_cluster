@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+require "bundler/setup"
+require "kube/cluster"
+
 module Kube
   module Cluster
     class Connection
