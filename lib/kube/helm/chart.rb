@@ -183,9 +183,22 @@ module Kube
 
         def write_values_tempfile(values)
           tmpfile = Tempfile.new(["helm-values-", ".yaml"])
-          tmpfile.write(values.to_yaml)
+          tmpfile.write(deep_stringify_keys(values).to_yaml)
           tmpfile.flush
           tmpfile
+        end
+
+        def deep_stringify_keys(obj)
+          case obj
+          when Hash
+            obj.each_with_object({}) do |(k, v), result|
+              result[k.to_s] = deep_stringify_keys(v)
+            end
+          when Array
+            obj.map { |v| deep_stringify_keys(v) }
+          else
+            obj
+          end
         end
 
         def deep_symbolize_keys(obj)
@@ -390,6 +403,20 @@ test do
       end
 
       captured_cmd.should.include "nginx"
+    end
+  end
+
+  it "apply_values_stringifies_symbol_keys_in_values_file" do
+    Dir.mktmpdir do |dir|
+      File.write(File.join(dir, "Chart.yaml"), { "name" => "my-app", "version" => "1.0.0" }.to_yaml)
+      chart = Kube::Helm::Chart.open(dir)
+
+      tmpfile = chart.send(:write_values_tempfile, { k8sDistribution: "k3s", nested: { setup: [] } })
+      contents = File.read(tmpfile.path)
+      contents.should.include "k8sDistribution"
+      contents.should.not.include ":k8sDistribution"
+      contents.should.include "nested"
+      contents.should.not.include ":nested"
     end
   end
 
