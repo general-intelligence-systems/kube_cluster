@@ -69,10 +69,9 @@ module Kube
         # end
         #
         # Therefore we must make sure that we're rebuilding from the 
-        # initial schema object instead...
+        # initial Kube::Cluster object instead... NOT Kube::Schema...
         #
-        Kube::Schema[hash.delete(:kind).to_s].new(**hash)
-        #self.class.new(**hash)
+        Kube::Cluster[hash.delete(:kind).to_s].new(**hash)
       end
 
       # Read a label value from the resource.
