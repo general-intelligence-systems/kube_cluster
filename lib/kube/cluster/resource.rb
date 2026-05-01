@@ -51,7 +51,7 @@ module Kube
       end
 
       # Build a new resource of the same schema subclass from a hash.
-      def rebuild(hash)
+      def rebuild(hash = {})
         self.class.new(hash)
       end
 
