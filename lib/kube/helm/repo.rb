@@ -48,8 +48,10 @@ module Kube
       def add
         tap do
           if endpoint.requires_add?
+            name = @name
+            url  = endpoint.url
             helm.run(
-              helm.call { repo.add.(@name).(endpoint.url) }.to_s
+              helm.call { repo.add.(name).(url) }.to_s
             )
           end
         end
@@ -62,8 +64,9 @@ module Kube
       def update
         tap do
           if endpoint.requires_add?
+            name = @name
             helm.run(
-              helm.call { repo.update.(@name) }.to_s
+              helm.call { repo.update.(name) }.to_s
             )
           end
         end
@@ -76,8 +79,9 @@ module Kube
       def remove
         tap do
           if endpoint.requires_add?
+            name = @name
             helm.run(
-              helm.call { repo.remove.(@name) }.to_s
+              helm.call { repo.remove.(name) }.to_s
             )
           end
         end
