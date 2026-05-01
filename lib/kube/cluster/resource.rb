@@ -52,7 +52,7 @@ module Kube
 
       # Build a new resource of the same schema subclass from a hash.
       def rebuild(hash = {})
-        self.class.new(hash)
+        self.class.new(**hash)
       end
 
       # Read a label value from the resource.
