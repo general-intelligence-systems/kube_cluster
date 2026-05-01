@@ -1,0 +1,12 @@
+getting-started:
+  order: 1
+resources:
+  order: 2
+middleware:
+  order: 3
+dirty-tracking:
+  order: 4
+helm-charts:
+  order: 5
+crds:
+  order: 6
