@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
+require "bundler/setup"
+require "scampi"
 require "kube/schema"
+
 require_relative "../kube/errors"
 require_relative "cluster/version"
 require 'kube/ctl'
