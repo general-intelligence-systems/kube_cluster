@@ -33,6 +33,19 @@ module Kube
           end
         end
 
+        # Run the manifest through every middleware, then emit YAML.
+        # Called inside the Stack block as the final step.
+        #
+        #   Middleware::Stack.new {
+        #     use SetNamespace
+        #     run manifest
+        #   }
+        #
+        def run(manifest)
+          call(manifest)
+          puts manifest.to_yaml
+        end
+
         # True when no middleware has been registered.
         def empty?
           @middleware.empty?
