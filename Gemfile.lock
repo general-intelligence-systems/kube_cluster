@@ -1,9 +1,9 @@
 PATH
   remote: .
   specs:
-    kube_cluster (0.4.12)
-      kube_kubectl (~> 2.0.9)
-      kube_schema (~> 1.4.3)
+    kube_cluster (0.4.13)
+      kube_kubectl (~> 2.0)
+      kube_schema (~> 1.4)
       scampi (~> 0.1)
 
 GEM
@@ -18,7 +18,7 @@ GEM
       traces (~> 0.18)
     async-container (0.34.5)
       async (~> 2.22)
-    async-http (0.95.0)
+    async-http (0.95.1)
       async (>= 2.10.2)
       async-pool (~> 0.11)
       io-endpoint (~> 0.14)
@@ -99,14 +99,14 @@ GEM
     http-accept (2.2.1)
     io-console (0.8.2)
     io-endpoint (0.17.2)
-    io-event (1.15.1)
+    io-event (1.16.0)
     io-stream (0.13.0)
     irb (1.18.0)
       pp (>= 0.6.0)
       prism (>= 1.3.0)
       rdoc (>= 4.0.0)
       reline (>= 0.4.2)
-    json (2.19.4)
+    json (2.19.5)
     json_schemer (2.5.0)
       bigdecimal
       hana (~> 1.3)
@@ -118,12 +118,13 @@ GEM
       rubyshell (~> 1.5)
       shellwords (~> 0.2.2)
       string_builder (~> 1.2.2)
-    kube_schema (1.4.3)
+    kube_schema (1.4.5)
       json_schemer (~> 2.5.0)
       rubyshell (~> 1.5.0)
     language_server-protocol (3.17.0.5)
     lint_roller (1.1.0)
-    localhost (1.7.0)
+    localhost (1.8.0)
+      bake
     logger (1.7.0)
     mail (2.9.0)
       logger
