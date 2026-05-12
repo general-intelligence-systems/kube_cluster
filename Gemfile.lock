@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    kube_cluster (0.4.13)
+    kube_cluster (0.4.14)
       kube_kubectl (~> 2.0)
       kube_schema (~> 1.4)
       scampi (~> 0.1)
@@ -118,7 +118,7 @@ GEM
       rubyshell (~> 1.5)
       shellwords (~> 0.2.2)
       string_builder (~> 1.2.2)
-    kube_schema (1.4.5)
+    kube_schema (1.4.6)
       json_schemer (~> 2.5.0)
       rubyshell (~> 1.5.0)
     language_server-protocol (3.17.0.5)
