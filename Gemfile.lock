@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    kube_cluster (0.4.16)
+    kube_cluster (0.5.0)
       kube_kubectl (~> 2.0)
       kube_schema (~> 1.4.8)
       scampi (~> 0.1)
@@ -50,7 +50,7 @@ GEM
       samovar (~> 2.1)
     bake-gem (0.13.1)
       console (~> 1.25)
-    bake-modernize (0.54.1)
+    bake-modernize (0.55.0)
       async-http
       async-ollama (~> 0.10)
       bake
@@ -150,7 +150,7 @@ GEM
       timeout
     net-smtp (0.5.1)
       net-protocol
-    openssl (4.0.1)
+    openssl (4.0.2)
     parallel (2.1.0)
     parser (3.3.11.1)
       ast (~> 2.4.1)
@@ -193,7 +193,7 @@ GEM
     regexp_parser (2.12.0)
     reline (0.6.3)
       io-console (~> 0.5)
-    rubocop (1.86.1)
+    rubocop (1.86.2)
       json (~> 2.3)
       language_server-protocol (~> 3.17.0.2)
       lint_roller (~> 1.1.0)
