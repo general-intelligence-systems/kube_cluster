@@ -6,7 +6,7 @@ require "kube/schema"
 
 require_relative "../kube/errors"
 require_relative "cluster/version"
-require_relative "cluster/script_commands"
+require_relative "cluster/script_command"
 require 'kube/ctl'
 require_relative 'helm/repo'
 
