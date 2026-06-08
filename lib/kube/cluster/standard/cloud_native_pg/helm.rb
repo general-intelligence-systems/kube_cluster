@@ -30,7 +30,7 @@ module Kube
           # class Cluster < Kube::Cluster["HelmChart"]
           #   def initialize(&block)
           #     super {
-          #       metadata.name = "cloudnative-pg"
+          #       metadata.name = "cloudnative-pg--cluster"
           #       metadata.namespace = "kube-system"
           #       spec.chart = "cluster"
           #       spec.version = "0.6.1"
@@ -46,7 +46,7 @@ module Kube
           class Barman < Kube::Cluster["HelmChart"]
             def initialize(&block)
               super {
-                metadata.name = "cloudnative-pg"
+                metadata.name = "plugin-barman-cloud"
                 metadata.namespace = "kube-system"
                 spec.chart = "plugin-barman-cloud"
                 spec.version = "0.6.0"
@@ -65,27 +65,33 @@ module Kube
 end
 
 test do
-  it "Operator initializes without error" do
-    Kube::Cluster::Standard::CloudNativePg::Helm::Operator
-      .new()
-      .to_yaml
-      .is_a?(String)
-      .should == true
+  describe "Operator" do
+    it "initializes without error" do
+      Kube::Cluster::Standard::CloudNativePg::Helm::Operator
+        .new()
+        .to_yaml
+        .is_a?(String)
+        .should == true
+    end
   end
 
-  # it "Cluster initializes without error" do
-  #   Kube::Cluster::Standard::CloudNativePg::Helm::Cluster
-  #     .new()
-  #     .to_yaml
-  #     .is_a?(String)
-  #     .should == true
-  # end
+  #describe "Cluster" do
+  #  it "initializes without error" do
+  #    Kube::Cluster::Standard::CloudNativePg::Helm::Cluster
+  #      .new()
+  #      .to_yaml
+  #      .is_a?(String)
+  #      .should == true
+  #  end
+  #end
 
-  it "Barman initializes without error" do
-    Kube::Cluster::Standard::CloudNativePg::Helm::Barman
-      .new()
-      .to_yaml
-      .is_a?(String)
-      .should == true
+  describe "Barman" do
+    it "initializes without error" do
+      Kube::Cluster::Standard::CloudNativePg::Helm::Barman
+        .new()
+        .to_yaml
+        .is_a?(String)
+        .should == true
+    end
   end
 end

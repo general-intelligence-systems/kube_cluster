@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    kube_cluster (0.6.0)
+    kube_cluster (0.7.0)
       kube_kubectl (~> 2.0)
       kube_schema (~> 1.5)
       scampi (~> 0.1)
