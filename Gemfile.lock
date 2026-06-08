@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    kube_cluster (0.8.0)
+    kube_cluster (0.9.0)
       activesupport (~> 8.0)
       kube_kubectl (~> 2.0)
       kube_schema (~> 1.5)
