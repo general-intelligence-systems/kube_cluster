@@ -71,7 +71,10 @@ module Kube
         # Therefore we must make sure that we're rebuilding from the 
         # initial Kube::Cluster object instead... NOT Kube::Schema...
         #
-        Kube::Cluster[hash.delete(:kind).to_s].new(**hash)
+        kind = hash.delete(:kind).to_s
+        api_version = hash.delete(:apiVersion)&.to_s
+        lookup = api_version ? "#{api_version}/#{kind}" : kind
+        Kube::Cluster[lookup].new(**hash)
       end
 
       # Read a label value from the resource.
