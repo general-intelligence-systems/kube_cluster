@@ -35,4 +35,5 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "kube_schema", "~> 1.5"
   spec.add_dependency "kube_kubectl", "~> 2.0"
+  spec.add_dependency "activesupport", "~> 8.0"
 end

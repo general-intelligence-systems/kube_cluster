@@ -3,6 +3,7 @@
 require "bundler/setup"
 require "scampi"
 require "kube/schema"
+require "active_support/core_ext/string/inflections"
 
 require_relative "../kube/errors"
 require_relative "cluster/version"

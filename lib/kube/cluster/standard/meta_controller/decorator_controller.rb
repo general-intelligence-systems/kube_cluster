@@ -1,0 +1,79 @@
+# frozen_string_literal: true
+
+# TEMPORARILY DISABLED: metacontroller.k8s.io CRDs (DecoratorController) are not
+# registered in kube_schema, so subclassing the kind raises at load time and
+# aborts `require "kube/cluster"`. Commented out until the schema is registered.
+=begin
+require "bundler/setup"
+require "kube/cluster"
+
+module Kube
+  module Cluster   
+    module Standard
+      module MetaController
+        class DecoratorController < Kube::Cluster['DecoratorController'] 
+          def initialize(
+            name:, webhook_url:,
+            resync_period: 30, resources: {}, attachments: {}, &block
+          )
+
+            resolved_resources   = resolve_hash(resources)
+            resolved_attachments = resolve_hash(attachments)
+
+            super() {
+              metadata.name = name
+
+              spec.resources           = resolved_resources
+              spec.attachments         = resolved_attachments
+              spec.resyncPeriodSeconds = resync_period
+              spec.hooks.sync.webhook  = { url: webhook_url }
+
+              instance_exec(&block) if block
+            }
+          end
+
+          private
+
+            def resolve_ref(ref)
+              if ref.is_a?(Hash)
+                ref
+              else
+                if ref.is_a?(Class)
+                  klass = ref
+                else
+                  klass = ref.class
+                end
+
+                {
+                  apiVersion: klass.defaults['apiVersion'],
+                  resource:   klass.defaults['kind'].downcase.pluralize
+                }
+              end 
+            end
+
+            def resolve_hash(hash)
+              hash.map do |klass, options|
+                resolve_ref(klass).merge(options || {})
+              end
+            end
+        end
+      end
+    end
+  end
+end
+
+test do
+  describe "MetaController::DecoratorController" do
+    it "initializes without error" do
+      Kube::Cluster::Standard::MetaController::DecoratorController
+        .new(
+          name: nil,
+          webhook_url: nil,
+        )
+        .to_yaml
+        .is_a?(String)
+        .should == true
+    end
+  end
+end
+=end

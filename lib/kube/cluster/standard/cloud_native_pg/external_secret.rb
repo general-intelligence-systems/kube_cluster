@@ -8,6 +8,7 @@ module Kube
     module Standard
       module CloudNativePg
         class ExternalSecret < Kube::Cluster["ExternalSecret"]
+
           DB_HOST = "postgres-rw.cloudnative-pg.svc.cluster.local"
 
           def initialize(name:, env_prefix: "DB", db_host: DB_HOST, &block)
@@ -31,6 +32,7 @@ module Kube
                 { secretKey: "username", remoteRef: { key: "postgres-app", property: "username" } },
                 { secretKey: "password", remoteRef: { key: "postgres-app", property: "password" } },
               ]
+
               instance_exec(&block) if block_given?
             }
           end
@@ -45,7 +47,7 @@ test do
     it "initializes without error" do
       Kube::Cluster::Standard::CloudNativePg::ExternalSecret
         .new(
-          name: "my-example-database"
+          name: "my-external-secret"
         )
         .to_yaml
         .is_a?(String)
