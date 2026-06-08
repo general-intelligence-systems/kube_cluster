@@ -28,7 +28,7 @@ manifest = Kube::Cluster::Manifest.new(
 )
 
 stack = Kube::Cluster::Middleware::Stack.new do
-  use Middleware::Namespace
+  use Middleware::SetNamespace
   use Middleware::Labels
 end
 

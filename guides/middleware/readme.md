@@ -24,7 +24,7 @@ Kube::Cluster::Middleware::Stack.new {
   use Middleware::ServiceForDeployment
   use Middleware::IngressForService
   use Middleware::HPAForDeployment
-  use Middleware::Namespace, "production"
+  use Middleware::SetNamespace, "production"
   use Middleware::Labels, managed_by: "kube_cluster"
   use Middleware::ResourcePreset
   use Middleware::SecurityContext

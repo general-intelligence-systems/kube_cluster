@@ -9,7 +9,7 @@ module Kube
       #   stack = Kube::Cluster::Middleware::Stack.new do
       #     use Middleware::ServiceForDeployment
       #     use Middleware::Labels, app: "web"
-      #     use Middleware::Namespace, "production"
+      #     use Middleware::SetNamespace, "production"
       #   end
       #
       #   stack.call(manifest)

@@ -14,7 +14,7 @@ module Kube
     #   manifest << Kube::Cluster["Deployment"].new { ... }
     #
     #   stack = Kube::Cluster::Middleware::Stack.new do
-    #     use Middleware::Namespace, "production"
+    #     use Middleware::SetNamespace, "production"
     #     use Middleware::Labels, app: "web-app"
     #   end
     #
@@ -77,7 +77,7 @@ test do
     }
 
     stack = Middleware::Stack.new do
-      use Middleware::Namespace, "production"
+      use Middleware::SetNamespace, "production"
     end
     stack.call(m)
 
@@ -91,7 +91,7 @@ test do
       metadata.name = "test"
     }
 
-    Middleware::Namespace.new("production").call(m)
+    Middleware::SetNamespace.new("production").call(m)
 
     yaml = m.to_yaml
     yaml.should.include "namespace: production"
@@ -102,7 +102,7 @@ test do
     m << Kube::Cluster["ConfigMap"].new { metadata.name = "a" }
     m << Kube::Cluster["ConfigMap"].new { metadata.name = "b" }
 
-    Middleware::Namespace.new("production").call(m)
+    Middleware::SetNamespace.new("production").call(m)
 
     names = m.map { |r| r.to_h.dig(:metadata, :name) }
     names.should == %w[a b]
@@ -117,7 +117,7 @@ test do
     }
 
     stack = Middleware::Stack.new do
-      use Middleware::Namespace, "staging"
+      use Middleware::SetNamespace, "staging"
       use Middleware::Labels, app: "myapp", managed_by: "kube_cluster"
     end
     stack.call(m)
@@ -144,7 +144,7 @@ test do
     m = Kube::Cluster::Manifest.new
     m << Kube::Cluster["ConfigMap"].new { metadata.name = "test" }
 
-    Middleware::Namespace.new("production").call(m)
+    Middleware::SetNamespace.new("production").call(m)
 
     enum = m.each
     enum.should.be.instance_of Enumerator
@@ -197,7 +197,7 @@ test do
 
     stack = Middleware::Stack.new do
       use Middleware::ServiceForDeployment           # generates Service
-      use Middleware::Namespace, "production"         # namespaces everything
+      use Middleware::SetNamespace, "production"         # namespaces everything
       use Middleware::Labels, managed_by: "middleware" # labels everything
     end
     stack.call(m)
