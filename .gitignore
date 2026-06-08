@@ -6,3 +6,5 @@
 /tmp/
 /vendor/bundle
 /kubeconfig.yaml
+*.swo
+*.swp
