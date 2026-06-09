@@ -25,6 +25,26 @@ module Kube
 
           input.each do |mount_path, source|
             case source
+            when Secret::KeyRef
+              secret_name = source.secret.secret_name
+              key  = source.key_name
+              # Unique, DNS-1123-safe volume name per key so multiple keys from
+              # the same secret don't collide on the volume name.
+              vol  = "#{secret_name}-#{key.tr('._', '--')}"
+              volumes << {
+                name: vol,
+                secret: {
+                  secretName: secret_name,
+                  items: [{ key: key, path: key }]
+                }
+              }
+              mounts << {
+                name: vol,
+                mountPath: mount_path,
+                subPath: key,
+                readOnly: true
+              }
+
             when ESO::ExternalSecret::KeyRef
               name = source.secret.secret_name
               key  = source.key_name
