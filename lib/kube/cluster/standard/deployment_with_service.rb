@@ -13,6 +13,7 @@ module Kube
           port:,
           namespace: 'default',
           env: {},
+          command: nil,
           security_context: nil,
           pod_security_context: nil,
           volume_mounts: {},
@@ -50,6 +51,7 @@ module Kube
               ports: [{ name: 'http', containerPort: port, protocol: 'TCP' }],
               env: processed_env
             }
+            container[:command] = command if command
             container[:securityContext] = security_context if security_context
             container[:volumeMounts] = processed_volumes[:volume_mounts] unless processed_volumes[:volume_mounts].empty?
 
