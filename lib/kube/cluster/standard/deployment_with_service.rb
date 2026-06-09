@@ -14,6 +14,7 @@ module Kube
           namespace: 'default',
           env: {},
           command: nil,
+          init_containers: [],
           security_context: nil,
           pod_security_context: nil,
           volume_mounts: {},
@@ -56,6 +57,7 @@ module Kube
             container[:volumeMounts] = processed_volumes[:volume_mounts] unless processed_volumes[:volume_mounts].empty?
 
             spec.template.spec.containers = [container]
+            spec.template.spec.initContainers = init_containers unless init_containers.empty?
             spec.template.spec.volumes = processed_volumes[:volumes] unless processed_volumes[:volumes].empty?
           end
 
