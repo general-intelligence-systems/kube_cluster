@@ -1,9 +1,5 @@
 # frozen_string_literal: true
 
-# TEMPORARILY DISABLED: metacontroller.k8s.io CRDs (CompositeController) are not
-# registered in kube_schema, so subclassing the kind raises at load time and
-# aborts `require "kube/cluster"`. Commented out until the schema is registered.
-=begin
 require "bundler/setup"
 require "kube/cluster"
 
@@ -68,8 +64,9 @@ test do
     it "initializes without error" do
       Kube::Cluster::Standard::MetaController::CompositeController
         .new(
-          name: nil,
-          webhook_url: nil,
+          name: "my-controller",
+          webhook_url: "http://hook.default.svc/sync",
+          parent_resource: { apiVersion: "apps/v1", resource: "deployments" },
         )
         .to_yaml
         .is_a?(String)
@@ -77,4 +74,3 @@ test do
     end
   end
 end
-=end
