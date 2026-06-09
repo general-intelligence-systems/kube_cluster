@@ -25,7 +25,7 @@ module Kube
 
           input.each do |mount_path, source|
             case source
-            when ExternalSecret::KeyRef
+            when ESO::ExternalSecret::KeyRef
               name = source.secret.secret_name
               key  = source.key_name
               volumes << {
@@ -42,7 +42,7 @@ module Kube
                 readOnly: true
               }
 
-            when ExternalSecret
+            when ESO::ExternalSecret
               name = source.secret_name
               volumes << { name: name, secret: { secretName: name } }
               mounts  << { name: name, mountPath: mount_path }

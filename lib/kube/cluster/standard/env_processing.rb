@@ -24,7 +24,7 @@ module Kube
           env.map do |key, value|
             key = key.to_s
 
-            if value.is_a?(ExternalSecret::TemplateRef)
+            if value.is_a?(ESO::ExternalSecret::TemplateRef)
               value.secret.register_template!(key, value.template_value)
               { name: key, valueFrom: { secretKeyRef: { name: value.secret.secret_name, key: key } } }
             else
