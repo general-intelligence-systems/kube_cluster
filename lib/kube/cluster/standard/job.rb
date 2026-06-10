@@ -6,7 +6,7 @@ require "kube/cluster"
 module Kube
   module Cluster
     module Standard
-      class Job < Kube::Cluster["Secret"]
+      class Job < Kube::Cluster["Job"]
         def initialize(name:, image:, env: {}, command: nil, backoff_limit: 3, ttl: 300, &block)
           processed_env = EnvProcessing.process(env)
 
