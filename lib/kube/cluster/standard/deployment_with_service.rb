@@ -19,6 +19,8 @@ module Kube
           pod_security_context: nil,
           volume_mounts: {},
           service_port: nil,
+          stdin: false,
+          tty: false,
           &block
         )
           @_limits = {}
@@ -55,6 +57,12 @@ module Kube
             container[:command] = command if command
             container[:securityContext] = security_context if security_context
             container[:volumeMounts] = processed_volumes[:volume_mounts] unless processed_volumes[:volume_mounts].empty?
+
+            # Keep stdin/tty open so the pod can be `kubectl attach`-ed for
+            # interactive flows (e.g. an OAuth proxy that prompts for a
+            # redirect URL on first authorization).
+            container[:stdin] = true if stdin
+            container[:tty] = true if tty
 
             spec.template.spec.containers = [container]
             spec.template.spec.initContainers = init_containers unless init_containers.empty?
@@ -151,6 +159,21 @@ test do
         .to_yaml
         .is_a?(String)
         .should == true
+    end
+
+    it "sets stdin/tty on the container when requested" do
+      yaml = Kube::Cluster::Standard::DeploymentWithService
+        .new(
+          name: "interactive",
+          image: "ruby/ruby",
+          port: 3000,
+          stdin: true,
+          tty: true,
+        )
+        .to_yaml
+
+      yaml.include?("stdin: true").should == true
+      yaml.include?("tty: true").should == true
     end
   end
 end
