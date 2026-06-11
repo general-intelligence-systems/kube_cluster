@@ -21,15 +21,18 @@ module Kube
       class ServiceAccountWithRole < Kube::Cluster::Manifest
         def initialize(service_account:, role:, name: nil, &block)
           name ||= service_account.name
-          role.name = name
+
+          # Rebuild the Role with the derived name (a Standard::Role, so the
+          # binding's role.name reader works).
+          named_role = Kube::Cluster::Standard::Role.new(name: name, rules: role.rules_input)
 
           role_binding = Kube::Cluster::Standard::RoleBinding.new(
-            role: role,
+            role: named_role,
             service_account: service_account,
             name: name,
           )
 
-          super(service_account, role, role_binding)
+          super(service_account, named_role, role_binding)
 
           instance_exec(&block) if block
         end

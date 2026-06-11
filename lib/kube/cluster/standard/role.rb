@@ -16,22 +16,22 @@ module Kube
       #   ])
       #
       class Role < Kube::Cluster["Role"]
+        # The original rules shorthand, so a named copy can be rebuilt from it
+        # (rebuild downgrades the class; reconstructing keeps it a Standard::Role).
+        attr_reader :rules_input
+
         def initialize(rules:, name: nil, &block)
-          built = self.class.build_rules(rules)
+          @rules_input = rules
 
           super() do
             metadata.name = name if name
-            self.rules = built
+            self.rules = Role.build_rules(rules)
             instance_exec(&block) if block
           end
         end
 
         def name
           to_h.dig(:metadata, :name)
-        end
-
-        def name=(value)
-          metadata.name = value
         end
 
         def self.build_rules(rules)
