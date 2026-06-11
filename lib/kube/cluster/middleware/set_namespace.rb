@@ -25,9 +25,25 @@ module Kube
 
               h = resource.to_h
               h[:metadata] ||= {}
-              next resource if h[:metadata][:namespace] && h[:metadata][:namespace] != 'default'
 
-              h[:metadata][:namespace] = @namespace
+              unless h[:metadata][:namespace] && h[:metadata][:namespace] != 'default'
+                h[:metadata][:namespace] = @namespace
+              end
+
+              # A RoleBinding's ServiceAccount subjects need an explicit
+              # namespace; fill in any left blank with the target namespace so
+              # same-namespace bindings (e.g. ServiceAccountWithRole) resolve.
+              if h[:kind] == 'RoleBinding' && h[:subjects].is_a?(Array)
+                h[:subjects] = h[:subjects].map { |subject|
+                  if subject[:kind] == 'ServiceAccount' &&
+                     (subject[:namespace].nil? || subject[:namespace].to_s.empty?)
+                    subject.merge(namespace: @namespace)
+                  else
+                    subject
+                  end
+                }
+              end
+
               resource.rebuild(h)
             }
           }
