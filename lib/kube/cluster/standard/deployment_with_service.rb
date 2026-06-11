@@ -73,7 +73,7 @@ module Kube
 
           instance_exec(&block) if block
 
-          _apply_limits(deployment)
+          deployment = _apply_limits(deployment)
           _apply_probes(deployment)
         end
 
@@ -88,7 +88,7 @@ module Kube
         private
 
         def _apply_limits(deployment)
-          return if @_limits.empty?
+          return deployment if @_limits.empty?
 
           container = deployment.to_h[:spec][:template][:spec][:containers][0]
           resources = {}
@@ -108,12 +108,12 @@ module Kube
           container[:resources] = resources
           h = deployment.to_h
           h[:spec][:template][:spec][:containers][0] = container
-          deployment.rebuild(h)
+          _replace(deployment, deployment.rebuild(h))
         end
 
         def _apply_probes(deployment)
-          return if @_probes.empty?
-          return unless @_probes[:url]
+          return deployment if @_probes.empty?
+          return deployment unless @_probes[:url]
 
           container = deployment.to_h[:spec][:template][:spec][:containers][0]
           url = @_probes[:url]
@@ -140,7 +140,14 @@ module Kube
 
           h = deployment.to_h
           h[:spec][:template][:spec][:containers][0] = container
-          deployment.rebuild(h)
+          _replace(deployment, deployment.rebuild(h))
+        end
+
+        # rebuild returns a new resource; swap it into this manifest so the
+        # change actually lands in the rendered output.
+        def _replace(old, rebuilt)
+          @resources[@resources.index(old)] = rebuilt
+          rebuilt
         end
       end
     end
@@ -174,6 +181,64 @@ test do
 
       yaml.include?("stdin: true").should == true
       yaml.include?("tty: true").should == true
+    end
+
+    it "renders limits from the block DSL" do
+      yaml = Kube::Cluster::Standard::DeploymentWithService
+        .new(
+          name: "limited",
+          image: "ruby/ruby",
+          port: 3000,
+        ) {
+          limits.cpu    = { "500m" => Float::INFINITY }
+          limits.memory = { "1Gi" => "2Gi" }
+        }
+        .to_yaml
+
+      yaml.include?("cpu: 500m").should == true
+      yaml.include?("memory: 1Gi").should == true
+      yaml.include?("memory: 2Gi").should == true
+      # Infinity means request-only — no cpu limit is emitted.
+      yaml.scan(/cpu:/).length.should == 1
+    end
+
+    it "renders probes from the block DSL" do
+      yaml = Kube::Cluster::Standard::DeploymentWithService
+        .new(
+          name: "probed",
+          image: "ruby/ruby",
+          port: 3000,
+        ) {
+          probes.url       = { path: "/healthz", port: "http" }
+          probes.liveness  = { 120 => 30 }
+          probes.readiness = { 60 => 10 }
+        }
+        .to_yaml
+
+      yaml.include?("livenessProbe").should == true
+      yaml.include?("readinessProbe").should == true
+      yaml.include?("path: \"/healthz\"").should == true
+      yaml.include?("initialDelaySeconds: 120").should == true
+      yaml.include?("initialDelaySeconds: 60").should == true
+    end
+
+    it "renders limits and probes together" do
+      yaml = Kube::Cluster::Standard::DeploymentWithService
+        .new(
+          name: "both",
+          image: "ruby/ruby",
+          port: 3000,
+        ) {
+          limits.memory    = { "1Gi" => "2Gi" }
+          probes.url       = { path: "/healthz", port: "http" }
+          probes.readiness = { 5 => 5 }
+        }
+        .to_yaml
+
+      # The probe pass must not clobber the limits pass (each rebuilds the
+      # deployment; the second must start from the first's result).
+      yaml.include?("memory: 2Gi").should == true
+      yaml.include?("readinessProbe").should == true
     end
   end
 end
