@@ -17,6 +17,11 @@ module Kube
         #   "FOO" => secret.template("{{ .bar }}")
         #     =>  { name: "FOO", valueFrom: { secretKeyRef: { name: "secret-name", key: "FOO" } } }
         #
+        # Secret::KeyRef values reference an existing secret's key directly
+        # (the same Secret.new(name:).key(...) form used by volume_mounts):
+        #   "FOO" => Secret.new(name: "creds").key("bar")
+        #     =>  { name: "FOO", valueFrom: { secretKeyRef: { name: "creds", key: "bar" } } }
+        #
         def self.process(env)
           return env if env.is_a?(Array)
           return [] if env.nil?
@@ -24,9 +29,12 @@ module Kube
           env.map do |key, value|
             key = key.to_s
 
-            if value.is_a?(ESO::ExternalSecret::TemplateRef)
+            case value
+            when ESO::ExternalSecret::TemplateRef
               value.secret.register_template!(key, value.template_value)
               { name: key, valueFrom: { secretKeyRef: { name: value.secret.secret_name, key: key } } }
+            when Kube::Cluster::Standard::Secret::KeyRef
+              { name: key, valueFrom: { secretKeyRef: { name: value.secret.secret_name, key: value.key_name } } }
             else
               { name: key, value: value.to_s }
             end
@@ -38,5 +46,21 @@ module Kube
 end
 
 test do
-  # no op
+  describe "EnvProcessing" do
+    it "maps a Secret::KeyRef to a secretKeyRef env var" do
+      secret = Kube::Cluster::Standard::Secret.new(name: "passbolt-db-creds")
+
+      Kube::Cluster::Standard::EnvProcessing
+        .process("DB_PASSWORD" => secret.key("password"))
+        .should == [
+          { name: "DB_PASSWORD", valueFrom: { secretKeyRef: { name: "passbolt-db-creds", key: "password" } } }
+        ]
+    end
+
+    it "still maps plain string values to value env vars" do
+      Kube::Cluster::Standard::EnvProcessing
+        .process("FOO" => "bar")
+        .should == [{ name: "FOO", value: "bar" }]
+    end
+  end
 end
