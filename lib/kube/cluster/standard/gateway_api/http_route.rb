@@ -25,7 +25,7 @@ module Kube
         #     gateway: "example-com-https",
         #     domains: ["sg.example.com"],
         #     service: { namespace: "sourcebot", name: "sourcebot", port: 3000 },
-        #     middleware: "forwardauth-oauth2-proxy-kremlin",
+        #     middleware: "forwardauth-oauth2-proxy-example",
         #   )
         #
         # Many matches -> one backend (forgejo git smart-HTTP):
