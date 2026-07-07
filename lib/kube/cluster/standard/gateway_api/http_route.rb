@@ -22,8 +22,8 @@ module Kube
         #
         #   Standard::GatewayApi::HTTPRoute.new(
         #     name:    "sourcebot",
-        #     gateway: "kremlin-email-https",
-        #     domains: ["sg.kremlin.email"],
+        #     gateway: "example-com-https",
+        #     domains: ["sg.example.com"],
         #     service: { namespace: "sourcebot", name: "sourcebot", port: 3000 },
         #     middleware: "forwardauth-oauth2-proxy-kremlin",
         #   )
@@ -31,7 +31,7 @@ module Kube
         # Many matches -> one backend (forgejo git smart-HTTP):
         #
         #   Standard::GatewayApi::HTTPRoute.new(
-        #     name: "forgejo-git", gateway: "cia-net-https", domains: ["git.cia.net"],
+        #     name: "forgejo-git", gateway: "example-net-https", domains: ["git.example.net"],
         #     regex:  ["/.+/info/refs", "/.+/git-upload-pack", "/.+/git-receive-pack"],
         #     prefix: ["/api", "/v2"],
         #     service: { namespace: "default", name: "forgejo-http", port: 3000 },
@@ -41,8 +41,8 @@ module Kube
         # Terminal http->https redirect (the `-http` sibling):
         #
         #   Standard::GatewayApi::HTTPRoute.new(
-        #     name: "sourcebot-http", gateway: "kremlin-email-http",
-        #     domains: ["sg.kremlin.email"], prefix: ["/"], redirect: true,
+        #     name: "sourcebot-http", gateway: "example-com-http",
+        #     domains: ["sg.example.com"], prefix: ["/"], redirect: true,
         #   )
         class HTTPRoute < Kube::Cluster["HTTPRoute"]
           GATEWAY_GROUP = "gateway.networking.k8s.io"
@@ -209,8 +209,9 @@ describe "GatewayApi::HTTPRoute" do
   it "initializes without error" do
     route.(
       name:    "docuseal",
-      gateway: "kremlin-email-https",
-      domains: ["docuseal.kremlin.email"],
+      gateway: "example-com-https",
+      domains: ["docuseal.example.com"],
+      prefix:  ["/"],
       service: { namespace: "ai", name: "docuseal", port: 3000 },
     ).to_yaml.is_a?(String).should == true
   end
@@ -218,22 +219,23 @@ describe "GatewayApi::HTTPRoute" do
   it "wires the fixed traefik-gateway parentRef with the given section" do
     yaml = route.(
       name:    "docuseal",
-      gateway: "kremlin-email-https",
-      domains: ["docuseal.kremlin.email"],
+      gateway: "example-com-https",
+      domains: ["docuseal.example.com"],
+      prefix:  ["/"],
       service: { namespace: "ai", name: "docuseal", port: 3000 },
     ).to_yaml
 
     yaml.should.include "traefik-gateway"
-    yaml.should.include "kremlin-email-https"
-    yaml.should.include "docuseal.kremlin.email"
+    yaml.should.include "example-com-https"
+    yaml.should.include "docuseal.example.com"
     yaml.should.include "PathPrefix"
   end
 
   it "renders many typed matches onto one backend with timeouts" do
     yaml = route.(
       name:    "forgejo-git",
-      gateway: "cia-net-https",
-      domains: ["git.cia.net"],
+      gateway: "example-net-https",
+      domains: ["git.example.net"],
       regex:   ["/.+/info/refs", "/.+/git-upload-pack", "/.+/git-receive-pack"],
       prefix:  ["/api", "/v2"],
       service: { namespace: "default", name: "forgejo-http", port: 3000 },
@@ -250,8 +252,8 @@ describe "GatewayApi::HTTPRoute" do
   it "renders a terminal https redirect with no backend" do
     yaml = route.(
       name:    "sourcebot-http",
-      gateway: "kremlin-email-http",
-      domains: ["sg.kremlin.email"],
+      gateway: "example-com-http",
+      domains: ["sg.example.com"],
       prefix:  ["/"],
       redirect: true,
     ).to_yaml
@@ -264,8 +266,8 @@ describe "GatewayApi::HTTPRoute" do
   it "renders a custom redirect with ReplaceFullPath and a 302" do
     yaml = route.(
       name:    "forgejo-login",
-      gateway: "cia-net-https",
-      domains: ["git.cia.net"],
+      gateway: "example-net-https",
+      domains: ["git.example.net"],
       exact:   ["/user/login"],
       redirect: { path: "/user/oauth2/authelia", status: 302 },
     ).to_yaml
@@ -278,23 +280,25 @@ describe "GatewayApi::HTTPRoute" do
   it "chains multiple middlewares as ExtensionRef filters" do
     yaml = route.(
       name:    "docker-registry",
-      gateway: "cia-net-https",
-      domains: ["registry.cia.net"],
+      gateway: "example-net-https",
+      domains: ["registry.example.net"],
+      prefix:  ["/"],
       service: { namespace: "docker-registry", name: "docker-registry", port: 80 },
-      middleware: ["clear-site-data-cookies", "forwardauth-oauth2-proxy-cia"],
+      middleware: ["clear-site-data-cookies", "forwardauth-oauth2-proxy-example"],
     ).to_yaml
 
     yaml.scan(/ExtensionRef/).length.should == 2
     yaml.should.include "clear-site-data-cookies"
-    yaml.should.include "forwardauth-oauth2-proxy-cia"
+    yaml.should.include "forwardauth-oauth2-proxy-example"
   end
 
   it "renders a header modifier and a co-located short-form backend" do
     yaml = route.(
       name:      "sogo",
       namespace: "mail",
-      gateway:   "kremlin-email-https",
-      domains:   ["sogo.kremlin.email"],
+      gateway:   "example-com-https",
+      domains:   ["sogo.example.com"],
+      prefix:    ["/"],
       service:   { name: "sogo", port: 80 },
       header_modifier: { remove: ["x-webobjects-remote-user"] },
     ).to_yaml
@@ -306,8 +310,9 @@ describe "GatewayApi::HTTPRoute" do
   it "supports a websocket header match" do
     yaml = route.(
       name:    "chrome-tool-ws",
-      gateway: "kremlin-email-https",
-      domains: ["chrome-tool-ws.kremlin.email"],
+      gateway: "example-com-https",
+      domains: ["chrome-tool-ws.example.com"],
+      prefix:  ["/"],
       service: { namespace: "ai", name: "chrome-tool-ws", port: 8765 },
       headers: { "Upgrade" => "websocket" },
     ).to_yaml
@@ -319,12 +324,13 @@ describe "GatewayApi::HTTPRoute" do
   it "renders multiple hostnames on one route" do
     yaml = route.(
       name:    "git",
-      gateway: "cia-net-https",
-      domains: ["git.cia.net", "git.kremlin.email"],
+      gateway: "example-net-https",
+      domains: ["git.example.net", "git.example.com"],
+      prefix:  ["/"],
       service: { namespace: "default", name: "forgejo-http", port: 3000 },
     ).to_yaml
 
-    yaml.should.include "git.cia.net"
-    yaml.should.include "git.kremlin.email"
+    yaml.should.include "git.example.net"
+    yaml.should.include "git.example.com"
   end
 end
