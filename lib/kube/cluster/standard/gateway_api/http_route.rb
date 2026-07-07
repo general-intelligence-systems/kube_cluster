@@ -86,7 +86,10 @@ module Kube
 
             super() {
               metadata.name      = name
-              metadata.namespace = namespace
+              # A co-located route (namespace: nil) omits metadata.namespace so
+              # it lands in whatever namespace applies it; cross-namespace routes
+              # in kube-system set it explicitly.
+              metadata.namespace = namespace if namespace
 
               spec.hostnames  = hostnames
               spec.parentRefs = [{
@@ -175,10 +178,21 @@ module Kube
           # the backend (the cross-namespace model, which needs a ReferenceGrant
           # the caller supplies). Omitting it yields the co-located short form.
           def _backend(service)
-            ref = { group: "", kind: "Service", name: service.fetch(:name) }
-            ref[:namespace] = service[:namespace] if service[:namespace]
-            ref[:port]      = service.fetch(:port)
-            ref[:weight]    = service.fetch(:weight, 1)
+            ref = {}
+            # Cross-namespace backends carry the explicit group/kind/namespace
+            # (and need a ReferenceGrant); a co-located Service uses the bare
+            # short form. Emitting group/kind only in the former keeps both
+            # shapes byte-identical to the hand-written routes they replace.
+            if service[:namespace]
+              ref[:group]     = ""
+              ref[:kind]      = "Service"
+              ref[:name]      = service.fetch(:name)
+              ref[:namespace] = service[:namespace]
+            else
+              ref[:name] = service.fetch(:name)
+            end
+            ref[:port]   = service.fetch(:port)
+            ref[:weight] = service.fetch(:weight, 1)
             ref
           end
         end

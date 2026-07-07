@@ -1,10 +1,10 @@
 PATH
   remote: .
   specs:
-    kube_cluster (0.20.0)
+    kube_cluster (0.21.0)
       activesupport (~> 8.0)
       kube_kubectl (~> 2.0)
-      kube_schema (~> 1.8)
+      kube_schema (~> 1.9.1)
 
 GEM
   remote: https://rubygems.org/
