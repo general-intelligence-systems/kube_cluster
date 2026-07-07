@@ -21,17 +21,17 @@ module Kube
   end
 end
 
-test do
-  describe "PersistentVolumeClaim" do
-    it "initializes without error" do
-      Kube::Cluster::Standard::PersistentVolumeClaim
-        .new(
-          name: "my-volume",
-          storage: "25Gi",
-        )
-        .to_yaml
-        .is_a?(String)
-        .should == true
-    end
+__END__
+
+describe "PersistentVolumeClaim" do
+  it "initializes without error" do
+    Kube::Cluster::Standard::PersistentVolumeClaim
+      .new(
+        name: "my-volume",
+        storage: "25Gi",
+      )
+      .to_yaml
+      .is_a?(String)
+      .should == true
   end
 end

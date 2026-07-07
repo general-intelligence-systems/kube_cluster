@@ -24,14 +24,14 @@ module Kube
   end
 end
 
-test do
-  describe "VictoriaMetrics::VMServiceScrape" do
-    it "initializes without error" do
-      Kube::Cluster::Standard::VictoriaMetrics::VMServiceScrape
-        .new(name: "opencost", job: "opencost", match_name: "opencost", port: "http")
-        .to_yaml
-        .is_a?(String)
-        .should == true
-    end
+__END__
+
+describe "VictoriaMetrics::VMServiceScrape" do
+  it "initializes without error" do
+    Kube::Cluster::Standard::VictoriaMetrics::VMServiceScrape
+      .new(name: "opencost", job: "opencost", match_name: "opencost", port: "http")
+      .to_yaml
+      .is_a?(String)
+      .should == true
   end
 end

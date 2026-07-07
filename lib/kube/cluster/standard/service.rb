@@ -25,17 +25,17 @@ module Kube
   end
 end
 
-test do
-  describe "Service" do
-    it "initializes without error" do
-      Kube::Cluster::Standard::Service
-        .new(
-          name: "my-secret",
-          ports: [],
-        )
-        .to_yaml
-        .is_a?(String)
-        .should == true
-    end
+__END__
+
+describe "Service" do
+  it "initializes without error" do
+    Kube::Cluster::Standard::Service
+      .new(
+        name: "my-secret",
+        ports: [],
+      )
+      .to_yaml
+      .is_a?(String)
+      .should == true
   end
 end

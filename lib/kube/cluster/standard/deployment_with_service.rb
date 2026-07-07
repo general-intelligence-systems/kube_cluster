@@ -154,91 +154,91 @@ module Kube
   end
 end
 
-test do
-  describe "DeploymentWithService" do
-    it "initializes without error" do
-      Kube::Cluster::Standard::DeploymentWithService
-        .new(
-          name: "pointless-ruby-container",
-          image: "ruby/ruby",
-          port: 3000,
-        )
-        .to_yaml
-        .is_a?(String)
-        .should == true
-    end
+__END__
 
-    it "sets stdin/tty on the container when requested" do
-      yaml = Kube::Cluster::Standard::DeploymentWithService
-        .new(
-          name: "interactive",
-          image: "ruby/ruby",
-          port: 3000,
-          stdin: true,
-          tty: true,
-        )
-        .to_yaml
+describe "DeploymentWithService" do
+  it "initializes without error" do
+    Kube::Cluster::Standard::DeploymentWithService
+      .new(
+        name: "pointless-ruby-container",
+        image: "ruby/ruby",
+        port: 3000,
+      )
+      .to_yaml
+      .is_a?(String)
+      .should == true
+  end
 
-      yaml.include?("stdin: true").should == true
-      yaml.include?("tty: true").should == true
-    end
+  it "sets stdin/tty on the container when requested" do
+    yaml = Kube::Cluster::Standard::DeploymentWithService
+      .new(
+        name: "interactive",
+        image: "ruby/ruby",
+        port: 3000,
+        stdin: true,
+        tty: true,
+      )
+      .to_yaml
 
-    it "renders limits from the block DSL" do
-      yaml = Kube::Cluster::Standard::DeploymentWithService
-        .new(
-          name: "limited",
-          image: "ruby/ruby",
-          port: 3000,
-        ) {
-          limits.cpu    = { "500m" => Float::INFINITY }
-          limits.memory = { "1Gi" => "2Gi" }
-        }
-        .to_yaml
+    yaml.include?("stdin: true").should == true
+    yaml.include?("tty: true").should == true
+  end
 
-      yaml.include?("cpu: 500m").should == true
-      yaml.include?("memory: 1Gi").should == true
-      yaml.include?("memory: 2Gi").should == true
-      # Infinity means request-only — no cpu limit is emitted.
-      yaml.scan(/cpu:/).length.should == 1
-    end
+  it "renders limits from the block DSL" do
+    yaml = Kube::Cluster::Standard::DeploymentWithService
+      .new(
+        name: "limited",
+        image: "ruby/ruby",
+        port: 3000,
+      ) {
+        limits.cpu    = { "500m" => Float::INFINITY }
+        limits.memory = { "1Gi" => "2Gi" }
+      }
+      .to_yaml
 
-    it "renders probes from the block DSL" do
-      yaml = Kube::Cluster::Standard::DeploymentWithService
-        .new(
-          name: "probed",
-          image: "ruby/ruby",
-          port: 3000,
-        ) {
-          probes.url       = { path: "/healthz", port: "http" }
-          probes.liveness  = { 120 => 30 }
-          probes.readiness = { 60 => 10 }
-        }
-        .to_yaml
+    yaml.include?("cpu: 500m").should == true
+    yaml.include?("memory: 1Gi").should == true
+    yaml.include?("memory: 2Gi").should == true
+    # Infinity means request-only — no cpu limit is emitted.
+    yaml.scan(/cpu:/).length.should == 1
+  end
 
-      yaml.include?("livenessProbe").should == true
-      yaml.include?("readinessProbe").should == true
-      yaml.include?("path: \"/healthz\"").should == true
-      yaml.include?("initialDelaySeconds: 120").should == true
-      yaml.include?("initialDelaySeconds: 60").should == true
-    end
+  it "renders probes from the block DSL" do
+    yaml = Kube::Cluster::Standard::DeploymentWithService
+      .new(
+        name: "probed",
+        image: "ruby/ruby",
+        port: 3000,
+      ) {
+        probes.url       = { path: "/healthz", port: "http" }
+        probes.liveness  = { 120 => 30 }
+        probes.readiness = { 60 => 10 }
+      }
+      .to_yaml
 
-    it "renders limits and probes together" do
-      yaml = Kube::Cluster::Standard::DeploymentWithService
-        .new(
-          name: "both",
-          image: "ruby/ruby",
-          port: 3000,
-        ) {
-          limits.memory    = { "1Gi" => "2Gi" }
-          probes.url       = { path: "/healthz", port: "http" }
-          probes.readiness = { 5 => 5 }
-        }
-        .to_yaml
+    yaml.include?("livenessProbe").should == true
+    yaml.include?("readinessProbe").should == true
+    yaml.include?("path: \"/healthz\"").should == true
+    yaml.include?("initialDelaySeconds: 120").should == true
+    yaml.include?("initialDelaySeconds: 60").should == true
+  end
 
-      # The probe pass must not clobber the limits pass (each rebuilds the
-      # deployment; the second must start from the first's result).
-      yaml.include?("memory: 2Gi").should == true
-      yaml.include?("readinessProbe").should == true
-    end
+  it "renders limits and probes together" do
+    yaml = Kube::Cluster::Standard::DeploymentWithService
+      .new(
+        name: "both",
+        image: "ruby/ruby",
+        port: 3000,
+      ) {
+        limits.memory    = { "1Gi" => "2Gi" }
+        probes.url       = { path: "/healthz", port: "http" }
+        probes.readiness = { 5 => 5 }
+      }
+      .to_yaml
+
+    # The probe pass must not clobber the limits pass (each rebuilds the
+    # deployment; the second must start from the first's result).
+    yaml.include?("memory: 2Gi").should == true
+    yaml.include?("readinessProbe").should == true
   end
 end

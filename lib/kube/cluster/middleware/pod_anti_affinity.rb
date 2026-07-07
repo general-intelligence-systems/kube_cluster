@@ -63,125 +63,125 @@ module Kube
   end
 end
 
-test do
-  Middleware = Kube::Cluster::Middleware
+__END__
 
-  it "injects_soft_anti_affinity_on_deployment" do
-    m = manifest(Kube::Cluster["Deployment"].new {
-      metadata.name = "web"
-      spec.selector.matchLabels = { app: "web", instance: "prod" }
-      spec.template.metadata.labels = { app: "web" }
-      spec.template.spec.containers = [
-        { name: "web", image: "nginx:latest" },
-      ]
-    })
+Middleware = Kube::Cluster::Middleware
 
-    Middleware::PodAntiAffinity.new.call(m)
-    affinity = m.resources.first.to_h.dig(:spec, :template, :spec, :affinity)
+it "injects_soft_anti_affinity_on_deployment" do
+  m = manifest(Kube::Cluster["Deployment"].new {
+    metadata.name = "web"
+    spec.selector.matchLabels = { app: "web", instance: "prod" }
+    spec.template.metadata.labels = { app: "web" }
+    spec.template.spec.containers = [
+      { name: "web", image: "nginx:latest" },
+    ]
+  })
 
-    paa = affinity.dig(:podAntiAffinity, :preferredDuringSchedulingIgnoredDuringExecution)
-    paa.size.should == 1
-  end
+  Middleware::PodAntiAffinity.new.call(m)
+  affinity = m.resources.first.to_h.dig(:spec, :template, :spec, :affinity)
 
-  it "custom_topology_key" do
-    m = manifest(Kube::Cluster["Deployment"].new {
-      metadata.name = "web"
-      spec.selector.matchLabels = { app: "web" }
-      spec.template.metadata.labels = { app: "web" }
-      spec.template.spec.containers = [
-        { name: "web", image: "nginx:latest" },
-      ]
-    })
-
-    Middleware::PodAntiAffinity.new(
-      topology_key: "topology.kubernetes.io/zone",
-    ).call(m)
-
-    affinity = m.resources.first.to_h.dig(:spec, :template, :spec, :affinity)
-    term = affinity.dig(:podAntiAffinity, :preferredDuringSchedulingIgnoredDuringExecution, 0)
-
-    term.dig(:podAffinityTerm, :topologyKey).should == "topology.kubernetes.io/zone"
-  end
-
-  it "custom_weight" do
-    m = manifest(Kube::Cluster["Deployment"].new {
-      metadata.name = "web"
-      spec.selector.matchLabels = { app: "web" }
-      spec.template.metadata.labels = { app: "web" }
-      spec.template.spec.containers = [
-        { name: "web", image: "nginx:latest" },
-      ]
-    })
-
-    Middleware::PodAntiAffinity.new(weight: 100).call(m)
-    term = m.resources.first.to_h.dig(:spec, :template, :spec, :affinity,
-      :podAntiAffinity, :preferredDuringSchedulingIgnoredDuringExecution, 0)
-
-    term[:weight].should == 100
-  end
-
-  it "skips_resources_with_existing_affinity" do
-    m = manifest(Kube::Cluster["Deployment"].new {
-      metadata.name = "web"
-      spec.selector.matchLabels = { app: "web" }
-      spec.template.metadata.labels = { app: "web" }
-      spec.template.spec.affinity = { nodeAffinity: { custom: true } }
-      spec.template.spec.containers = [
-        { name: "web", image: "nginx:latest" },
-      ]
-    })
-
-    Middleware::PodAntiAffinity.new.call(m)
-    affinity = m.resources.first.to_h.dig(:spec, :template, :spec, :affinity)
-
-    affinity.should == { nodeAffinity: { custom: true } }
-  end
-
-  it "skips_non_pod_bearing_resources" do
-    resource = Kube::Cluster["ConfigMap"].new { metadata.name = "config" }
-    m = manifest(resource)
-
-    Middleware::PodAntiAffinity.new.call(m)
-
-    m.resources.first.to_h.should == resource.to_h
-  end
-
-  it "skips_resources_without_match_labels" do
-    m = manifest(Kube::Cluster["Deployment"].new {
-      metadata.name = "web"
-      spec.template.metadata.labels = { app: "web" }
-      spec.template.spec.containers = [
-        { name: "web", image: "nginx:latest" },
-      ]
-    })
-
-    Middleware::PodAntiAffinity.new.call(m)
-    affinity = m.resources.first.to_h.dig(:spec, :template, :spec, :affinity)
-
-    affinity.should.be.nil
-  end
-
-  it "applies_to_statefulset" do
-    m = manifest(Kube::Cluster["StatefulSet"].new {
-      metadata.name = "db"
-      spec.selector.matchLabels = { app: "db" }
-      spec.template.metadata.labels = { app: "db" }
-      spec.template.spec.containers = [
-        { name: "postgres", image: "postgres:16" },
-      ]
-    })
-
-    Middleware::PodAntiAffinity.new.call(m)
-    affinity = m.resources.first.to_h.dig(:spec, :template, :spec, :affinity)
-
-    affinity.dig(:podAntiAffinity).should.not.be.nil
-  end
-
-  private
-
-    def manifest(*resources)
-      m = Kube::Cluster::Manifest.new
-      resources.each { |r| m << r }
-      m
-    end
+  paa = affinity.dig(:podAntiAffinity, :preferredDuringSchedulingIgnoredDuringExecution)
+  paa.size.should == 1
 end
+
+it "custom_topology_key" do
+  m = manifest(Kube::Cluster["Deployment"].new {
+    metadata.name = "web"
+    spec.selector.matchLabels = { app: "web" }
+    spec.template.metadata.labels = { app: "web" }
+    spec.template.spec.containers = [
+      { name: "web", image: "nginx:latest" },
+    ]
+  })
+
+  Middleware::PodAntiAffinity.new(
+    topology_key: "topology.kubernetes.io/zone",
+  ).call(m)
+
+  affinity = m.resources.first.to_h.dig(:spec, :template, :spec, :affinity)
+  term = affinity.dig(:podAntiAffinity, :preferredDuringSchedulingIgnoredDuringExecution, 0)
+
+  term.dig(:podAffinityTerm, :topologyKey).should == "topology.kubernetes.io/zone"
+end
+
+it "custom_weight" do
+  m = manifest(Kube::Cluster["Deployment"].new {
+    metadata.name = "web"
+    spec.selector.matchLabels = { app: "web" }
+    spec.template.metadata.labels = { app: "web" }
+    spec.template.spec.containers = [
+      { name: "web", image: "nginx:latest" },
+    ]
+  })
+
+  Middleware::PodAntiAffinity.new(weight: 100).call(m)
+  term = m.resources.first.to_h.dig(:spec, :template, :spec, :affinity,
+    :podAntiAffinity, :preferredDuringSchedulingIgnoredDuringExecution, 0)
+
+  term[:weight].should == 100
+end
+
+it "skips_resources_with_existing_affinity" do
+  m = manifest(Kube::Cluster["Deployment"].new {
+    metadata.name = "web"
+    spec.selector.matchLabels = { app: "web" }
+    spec.template.metadata.labels = { app: "web" }
+    spec.template.spec.affinity = { nodeAffinity: { custom: true } }
+    spec.template.spec.containers = [
+      { name: "web", image: "nginx:latest" },
+    ]
+  })
+
+  Middleware::PodAntiAffinity.new.call(m)
+  affinity = m.resources.first.to_h.dig(:spec, :template, :spec, :affinity)
+
+  affinity.should == { nodeAffinity: { custom: true } }
+end
+
+it "skips_non_pod_bearing_resources" do
+  resource = Kube::Cluster["ConfigMap"].new { metadata.name = "config" }
+  m = manifest(resource)
+
+  Middleware::PodAntiAffinity.new.call(m)
+
+  m.resources.first.to_h.should == resource.to_h
+end
+
+it "skips_resources_without_match_labels" do
+  m = manifest(Kube::Cluster["Deployment"].new {
+    metadata.name = "web"
+    spec.template.metadata.labels = { app: "web" }
+    spec.template.spec.containers = [
+      { name: "web", image: "nginx:latest" },
+    ]
+  })
+
+  Middleware::PodAntiAffinity.new.call(m)
+  affinity = m.resources.first.to_h.dig(:spec, :template, :spec, :affinity)
+
+  affinity.should.be.nil
+end
+
+it "applies_to_statefulset" do
+  m = manifest(Kube::Cluster["StatefulSet"].new {
+    metadata.name = "db"
+    spec.selector.matchLabels = { app: "db" }
+    spec.template.metadata.labels = { app: "db" }
+    spec.template.spec.containers = [
+      { name: "postgres", image: "postgres:16" },
+    ]
+  })
+
+  Middleware::PodAntiAffinity.new.call(m)
+  affinity = m.resources.first.to_h.dig(:spec, :template, :spec, :affinity)
+
+  affinity.dig(:podAntiAffinity).should.not.be.nil
+end
+
+private
+
+  def manifest(*resources)
+    m = Kube::Cluster::Manifest.new
+    resources.each { |r| m << r }
+    m
+  end

@@ -52,204 +52,204 @@ module Kube
   end
 end
 
-test do
-  Middleware = Kube::Cluster::Middleware
+__END__
 
-  # ── Bare manifest ────────────────────────────────────────────────────────
+Middleware = Kube::Cluster::Middleware
 
-  it "bare_manifest_enumerates_resources_unchanged" do
-    m = Kube::Cluster::Manifest.new
-    m << Kube::Cluster["ConfigMap"].new {
-      metadata.name = "test"
-      self.data = { key: "value" }
+# ── Bare manifest ────────────────────────────────────────────────────────
+
+it "bare_manifest_enumerates_resources_unchanged" do
+  m = Kube::Cluster::Manifest.new
+  m << Kube::Cluster["ConfigMap"].new {
+    metadata.name = "test"
+    self.data = { key: "value" }
+  }
+
+  resources = m.to_a
+  resources.size.should == 1
+end
+
+# ── Stack transforms resources ───────────────────────────────────────────
+
+it "stack_transforms_resources" do
+  m = Kube::Cluster::Manifest.new
+  m << Kube::Cluster["ConfigMap"].new {
+    metadata.name = "test"
+  }
+
+  stack = Middleware::Stack.new do
+    use Middleware::SetNamespace, "production"
+  end
+  stack.call(m)
+
+  resources = m.to_a
+  resources.first.to_h.dig(:metadata, :namespace).should == "production"
+end
+
+it "to_yaml_reflects_middleware" do
+  m = Kube::Cluster::Manifest.new
+  m << Kube::Cluster["ConfigMap"].new {
+    metadata.name = "test"
+  }
+
+  Middleware::SetNamespace.new("production").call(m)
+
+  yaml = m.to_yaml
+  yaml.should.include "namespace: production"
+end
+
+it "enumerable_methods_work" do
+  m = Kube::Cluster::Manifest.new
+  m << Kube::Cluster["ConfigMap"].new { metadata.name = "a" }
+  m << Kube::Cluster["ConfigMap"].new { metadata.name = "b" }
+
+  Middleware::SetNamespace.new("production").call(m)
+
+  names = m.map { |r| r.to_h.dig(:metadata, :name) }
+  names.should == %w[a b]
+end
+
+# ── Multi-middleware stack ──────────────────────────────────────────────
+
+it "multiple_middleware_compose_in_order" do
+  m = Kube::Cluster::Manifest.new
+  m << Kube::Cluster["ConfigMap"].new {
+    metadata.name = "test"
+  }
+
+  stack = Middleware::Stack.new do
+    use Middleware::SetNamespace, "staging"
+    use Middleware::Labels, app: "myapp", managed_by: "kube_cluster"
+  end
+  stack.call(m)
+
+  r = m.first
+  h = r.to_h
+
+  h.dig(:metadata, :namespace).should == "staging"
+end
+
+# ── size reflects resource count ─────────────────────────────────────────
+
+it "size_reflects_resource_count" do
+  m = Kube::Cluster::Manifest.new
+  m << Kube::Cluster["ConfigMap"].new { metadata.name = "a" }
+  m << Kube::Cluster["ConfigMap"].new { metadata.name = "b" }
+
+  m.size.should == 2
+end
+
+# ── each without block ──────────────────────────────────────────────────
+
+it "each_without_block_returns_enumerator" do
+  m = Kube::Cluster::Manifest.new
+  m << Kube::Cluster["ConfigMap"].new { metadata.name = "test" }
+
+  Middleware::SetNamespace.new("production").call(m)
+
+  enum = m.each
+  enum.should.be.instance_of Enumerator
+end
+
+# ── Generative middleware produces new resources ─────────────────────────
+
+it "generative_middleware_adds_service" do
+  m = Kube::Cluster::Manifest.new
+  m << Kube::Cluster["Deployment"].new {
+    metadata.name = "web"
+    metadata.namespace = "default"
+    spec.selector.matchLabels = { app: "web" }
+    spec.template.metadata.labels = { app: "web" }
+    spec.template.spec.containers = [
+      { name: "web", image: "nginx", ports: [{ name: "http", containerPort: 8080 }] },
+    ]
+  }
+
+  Middleware::ServiceForDeployment.new.call(m)
+
+  kinds = m.map { |r| r.to_h[:kind] }
+  kinds.should == %w[Deployment Service]
+end
+
+it "generative_middleware_does_not_affect_non_matching_resources" do
+  m = Kube::Cluster::Manifest.new
+  m << Kube::Cluster["ConfigMap"].new {
+    metadata.name = "config"
+  }
+
+  Middleware::ServiceForDeployment.new.call(m)
+
+  resources = m.to_a
+  resources.size.should == 1
+end
+
+# ── Generated resources flow through subsequent middleware stages ────────
+
+it "generated_resources_flow_through_subsequent_stages" do
+  m = Kube::Cluster::Manifest.new
+  m << Kube::Cluster["Deployment"].new {
+    metadata.name = "web"
+    spec.selector.matchLabels = { app: "web" }
+    spec.template.metadata.labels = { app: "web" }
+    spec.template.spec.containers = [
+      { name: "web", image: "nginx", ports: [{ name: "http", containerPort: 8080 }] },
+    ]
+  }
+
+  stack = Middleware::Stack.new do
+    use Middleware::ServiceForDeployment           # generates Service
+    use Middleware::SetNamespace, "production"         # namespaces everything
+    use Middleware::Labels, managed_by: "middleware" # labels everything
+  end
+  stack.call(m)
+
+  resources = m.to_a
+  resources.size.should == 2
+end
+
+# ── YAML serializes integers correctly ──────────────────────────────────
+
+it "to_yaml_serializes_integers_as_plain_values" do
+  m = Kube::Cluster::Manifest.new
+  m << Kube::Cluster["Deployment"].new {
+    metadata.name = "web"
+    spec.selector.matchLabels = { app: "web" }
+    spec.template.metadata.labels = { app: "web" }
+    spec.template.spec.containers = [
+      { name: "web", image: "nginx", ports: [{ name: "http", containerPort: 8080 }] },
+    ]
+  }
+
+  yaml = m.to_yaml
+  yaml.should.include "containerPort: 8080"
+end
+
+# ── Multi-generative: chained generation ────────────────────────────────
+
+it "chained_generative_middleware" do
+  m = Kube::Cluster::Manifest.new
+  m << Kube::Cluster["Deployment"].new {
+    metadata.name = "web"
+    metadata.namespace = "default"
+    metadata.labels = {
+      "app.kubernetes.io/expose":    "app.example.com",
+      "app.kubernetes.io/autoscale": "2-10",
     }
+    spec.selector.matchLabels = { app: "web" }
+    spec.template.metadata.labels = { app: "web" }
+    spec.template.spec.containers = [
+      { name: "web", image: "nginx", ports: [{ name: "http", containerPort: 8080 }] },
+    ]
+  }
 
-    resources = m.to_a
-    resources.size.should == 1
+  stack = Middleware::Stack.new do
+    use Middleware::ServiceForDeployment   # Deployment → +Service
+    use Middleware::IngressForService       # Service with expose label → +Ingress
+    use Middleware::HPAForDeployment        # Deployment with autoscale label → +HPA
   end
+  stack.call(m)
 
-  # ── Stack transforms resources ───────────────────────────────────────────
+  kinds = m.map { |r| r.to_h[:kind] }
 
-  it "stack_transforms_resources" do
-    m = Kube::Cluster::Manifest.new
-    m << Kube::Cluster["ConfigMap"].new {
-      metadata.name = "test"
-    }
-
-    stack = Middleware::Stack.new do
-      use Middleware::SetNamespace, "production"
-    end
-    stack.call(m)
-
-    resources = m.to_a
-    resources.first.to_h.dig(:metadata, :namespace).should == "production"
-  end
-
-  it "to_yaml_reflects_middleware" do
-    m = Kube::Cluster::Manifest.new
-    m << Kube::Cluster["ConfigMap"].new {
-      metadata.name = "test"
-    }
-
-    Middleware::SetNamespace.new("production").call(m)
-
-    yaml = m.to_yaml
-    yaml.should.include "namespace: production"
-  end
-
-  it "enumerable_methods_work" do
-    m = Kube::Cluster::Manifest.new
-    m << Kube::Cluster["ConfigMap"].new { metadata.name = "a" }
-    m << Kube::Cluster["ConfigMap"].new { metadata.name = "b" }
-
-    Middleware::SetNamespace.new("production").call(m)
-
-    names = m.map { |r| r.to_h.dig(:metadata, :name) }
-    names.should == %w[a b]
-  end
-
-  # ── Multi-middleware stack ──────────────────────────────────────────────
-
-  it "multiple_middleware_compose_in_order" do
-    m = Kube::Cluster::Manifest.new
-    m << Kube::Cluster["ConfigMap"].new {
-      metadata.name = "test"
-    }
-
-    stack = Middleware::Stack.new do
-      use Middleware::SetNamespace, "staging"
-      use Middleware::Labels, app: "myapp", managed_by: "kube_cluster"
-    end
-    stack.call(m)
-
-    r = m.first
-    h = r.to_h
-
-    h.dig(:metadata, :namespace).should == "staging"
-  end
-
-  # ── size reflects resource count ─────────────────────────────────────────
-
-  it "size_reflects_resource_count" do
-    m = Kube::Cluster::Manifest.new
-    m << Kube::Cluster["ConfigMap"].new { metadata.name = "a" }
-    m << Kube::Cluster["ConfigMap"].new { metadata.name = "b" }
-
-    m.size.should == 2
-  end
-
-  # ── each without block ──────────────────────────────────────────────────
-
-  it "each_without_block_returns_enumerator" do
-    m = Kube::Cluster::Manifest.new
-    m << Kube::Cluster["ConfigMap"].new { metadata.name = "test" }
-
-    Middleware::SetNamespace.new("production").call(m)
-
-    enum = m.each
-    enum.should.be.instance_of Enumerator
-  end
-
-  # ── Generative middleware produces new resources ─────────────────────────
-
-  it "generative_middleware_adds_service" do
-    m = Kube::Cluster::Manifest.new
-    m << Kube::Cluster["Deployment"].new {
-      metadata.name = "web"
-      metadata.namespace = "default"
-      spec.selector.matchLabels = { app: "web" }
-      spec.template.metadata.labels = { app: "web" }
-      spec.template.spec.containers = [
-        { name: "web", image: "nginx", ports: [{ name: "http", containerPort: 8080 }] },
-      ]
-    }
-
-    Middleware::ServiceForDeployment.new.call(m)
-
-    kinds = m.map { |r| r.to_h[:kind] }
-    kinds.should == %w[Deployment Service]
-  end
-
-  it "generative_middleware_does_not_affect_non_matching_resources" do
-    m = Kube::Cluster::Manifest.new
-    m << Kube::Cluster["ConfigMap"].new {
-      metadata.name = "config"
-    }
-
-    Middleware::ServiceForDeployment.new.call(m)
-
-    resources = m.to_a
-    resources.size.should == 1
-  end
-
-  # ── Generated resources flow through subsequent middleware stages ────────
-
-  it "generated_resources_flow_through_subsequent_stages" do
-    m = Kube::Cluster::Manifest.new
-    m << Kube::Cluster["Deployment"].new {
-      metadata.name = "web"
-      spec.selector.matchLabels = { app: "web" }
-      spec.template.metadata.labels = { app: "web" }
-      spec.template.spec.containers = [
-        { name: "web", image: "nginx", ports: [{ name: "http", containerPort: 8080 }] },
-      ]
-    }
-
-    stack = Middleware::Stack.new do
-      use Middleware::ServiceForDeployment           # generates Service
-      use Middleware::SetNamespace, "production"         # namespaces everything
-      use Middleware::Labels, managed_by: "middleware" # labels everything
-    end
-    stack.call(m)
-
-    resources = m.to_a
-    resources.size.should == 2
-  end
-
-  # ── YAML serializes integers correctly ──────────────────────────────────
-
-  it "to_yaml_serializes_integers_as_plain_values" do
-    m = Kube::Cluster::Manifest.new
-    m << Kube::Cluster["Deployment"].new {
-      metadata.name = "web"
-      spec.selector.matchLabels = { app: "web" }
-      spec.template.metadata.labels = { app: "web" }
-      spec.template.spec.containers = [
-        { name: "web", image: "nginx", ports: [{ name: "http", containerPort: 8080 }] },
-      ]
-    }
-
-    yaml = m.to_yaml
-    yaml.should.include "containerPort: 8080"
-  end
-
-  # ── Multi-generative: chained generation ────────────────────────────────
-
-  it "chained_generative_middleware" do
-    m = Kube::Cluster::Manifest.new
-    m << Kube::Cluster["Deployment"].new {
-      metadata.name = "web"
-      metadata.namespace = "default"
-      metadata.labels = {
-        "app.kubernetes.io/expose":    "app.example.com",
-        "app.kubernetes.io/autoscale": "2-10",
-      }
-      spec.selector.matchLabels = { app: "web" }
-      spec.template.metadata.labels = { app: "web" }
-      spec.template.spec.containers = [
-        { name: "web", image: "nginx", ports: [{ name: "http", containerPort: 8080 }] },
-      ]
-    }
-
-    stack = Middleware::Stack.new do
-      use Middleware::ServiceForDeployment   # Deployment → +Service
-      use Middleware::IngressForService       # Service with expose label → +Ingress
-      use Middleware::HPAForDeployment        # Deployment with autoscale label → +HPA
-    end
-    stack.call(m)
-
-    kinds = m.map { |r| r.to_h[:kind] }
-
-    m.to_a.size.should == 4
-  end
+  m.to_a.size.should == 4
 end

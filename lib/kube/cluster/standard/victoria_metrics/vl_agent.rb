@@ -28,14 +28,14 @@ module Kube
   end
 end
 
-test do
-  describe "VictoriaMetrics::VLAgent" do
-    it "initializes without error" do
-      Kube::Cluster::Standard::VictoriaMetrics::VLAgent
-        .new(name: "vlagent", remote_write_url: "http://vlsingle-vlsingle.metrics.svc:9428/internal/insert")
-        .to_yaml
-        .is_a?(String)
-        .should == true
-    end
+__END__
+
+describe "VictoriaMetrics::VLAgent" do
+  it "initializes without error" do
+    Kube::Cluster::Standard::VictoriaMetrics::VLAgent
+      .new(name: "vlagent", remote_write_url: "http://vlsingle-vlsingle.metrics.svc:9428/internal/insert")
+      .to_yaml
+      .is_a?(String)
+      .should == true
   end
 end

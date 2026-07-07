@@ -34,60 +34,60 @@ module Kube
   end
 end
 
-test do
-  Middleware = Kube::Cluster::Middleware
+__END__
 
-  it "adds_annotations" do
-    m = manifest(Kube::Cluster["ConfigMap"].new { metadata.name = "test" })
+Middleware = Kube::Cluster::Middleware
 
-    Middleware::Annotations.new(
-      "prometheus.io/scrape": "true",
-      "prometheus.io/port": "9090",
-    ).call(m)
+it "adds_annotations" do
+  m = manifest(Kube::Cluster["ConfigMap"].new { metadata.name = "test" })
 
-    annotations = m.resources.first.to_h.dig(:metadata, :annotations)
+  Middleware::Annotations.new(
+    "prometheus.io/scrape": "true",
+    "prometheus.io/port": "9090",
+  ).call(m)
 
-    annotations[:"prometheus.io/port"].should == "9090"
-  end
+  annotations = m.resources.first.to_h.dig(:metadata, :annotations)
 
-  it "resource_annotations_override_middleware_defaults" do
-    m = manifest(Kube::Cluster["ConfigMap"].new {
-      metadata.name = "test"
-      metadata.annotations = { "prometheus.io/port": "8080" }
-    })
-
-    Middleware::Annotations.new("prometheus.io/port": "9090").call(m)
-    annotations = m.resources.first.to_h.dig(:metadata, :annotations)
-
-    annotations[:"prometheus.io/port"].should == "8080"
-  end
-
-  it "preserves_existing_annotations" do
-    m = manifest(Kube::Cluster["ConfigMap"].new {
-      metadata.name = "test"
-      metadata.annotations = { "custom/annotation": "keep" }
-    })
-
-    Middleware::Annotations.new("prometheus.io/scrape": "true").call(m)
-    annotations = m.resources.first.to_h.dig(:metadata, :annotations)
-
-    annotations[:"prometheus.io/scrape"].should == "true"
-  end
-
-  it "converts_values_to_strings" do
-    m = manifest(Kube::Cluster["ConfigMap"].new { metadata.name = "test" })
-
-    Middleware::Annotations.new("prometheus.io/port": 9090).call(m)
-    annotations = m.resources.first.to_h.dig(:metadata, :annotations)
-
-    annotations[:"prometheus.io/port"].should == "9090"
-  end
-
-  private
-
-    def manifest(*resources)
-      m = Kube::Cluster::Manifest.new
-      resources.each { |r| m << r }
-      m
-    end
+  annotations[:"prometheus.io/port"].should == "9090"
 end
+
+it "resource_annotations_override_middleware_defaults" do
+  m = manifest(Kube::Cluster["ConfigMap"].new {
+    metadata.name = "test"
+    metadata.annotations = { "prometheus.io/port": "8080" }
+  })
+
+  Middleware::Annotations.new("prometheus.io/port": "9090").call(m)
+  annotations = m.resources.first.to_h.dig(:metadata, :annotations)
+
+  annotations[:"prometheus.io/port"].should == "8080"
+end
+
+it "preserves_existing_annotations" do
+  m = manifest(Kube::Cluster["ConfigMap"].new {
+    metadata.name = "test"
+    metadata.annotations = { "custom/annotation": "keep" }
+  })
+
+  Middleware::Annotations.new("prometheus.io/scrape": "true").call(m)
+  annotations = m.resources.first.to_h.dig(:metadata, :annotations)
+
+  annotations[:"prometheus.io/scrape"].should == "true"
+end
+
+it "converts_values_to_strings" do
+  m = manifest(Kube::Cluster["ConfigMap"].new { metadata.name = "test" })
+
+  Middleware::Annotations.new("prometheus.io/port": 9090).call(m)
+  annotations = m.resources.first.to_h.dig(:metadata, :annotations)
+
+  annotations[:"prometheus.io/port"].should == "9090"
+end
+
+private
+
+  def manifest(*resources)
+    m = Kube::Cluster::Manifest.new
+    resources.each { |r| m << r }
+    m
+  end

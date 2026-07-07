@@ -29,16 +29,16 @@ module Kube
   end
 end
 
-test do
-  describe "CloudNativePg::DatabaseWithExternalSecret" do
-    it "initializes without error" do
-      Kube::Cluster::Standard::CloudNativePg::DatabaseWithExternalSecret
-        .new(
-          name: "my-example-cluster"
-        )
-        .to_yaml
-        .is_a?(String)
-        .should == true
-    end
+__END__
+
+describe "CloudNativePg::DatabaseWithExternalSecret" do
+  it "initializes without error" do
+    Kube::Cluster::Standard::CloudNativePg::DatabaseWithExternalSecret
+      .new(
+        name: "my-example-cluster"
+      )
+      .to_yaml
+      .is_a?(String)
+      .should == true
   end
 end

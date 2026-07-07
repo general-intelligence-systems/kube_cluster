@@ -135,196 +135,196 @@ module Kube
   end
 end
 
-test do
-  # ── initialization ────────────────────────────────────────────────────
+__END__
 
-  it "initializes_with_name_and_url" do
-    repo = Kube::Helm::Repo.new("bitnami", url: "https://charts.bitnami.com/bitnami")
-    repo.name.should == "bitnami"
+# ── initialization ────────────────────────────────────────────────────
+
+it "initializes_with_name_and_url" do
+  repo = Kube::Helm::Repo.new("bitnami", url: "https://charts.bitnami.com/bitnami")
+  repo.name.should == "bitnami"
+end
+
+it "raises_on_empty_name" do
+  lambda {
+    Kube::Helm::Repo.new("", url: "https://charts.example.com")
+  }.should.raise ArgumentError
+end
+
+it "raises_on_nil_name" do
+  lambda {
+    Kube::Helm::Repo.new(nil, url: "https://charts.example.com")
+  }.should.raise ArgumentError
+end
+
+# ── oci? delegation ──────────────────────────────────────────────────
+
+it "oci_returns_true_for_oci_url" do
+  repo = Kube::Helm::Repo.new("ghcr", url: "oci://ghcr.io/my-org/charts")
+  repo.oci?.should.be.true
+end
+
+it "oci_returns_false_for_http_url" do
+  repo = Kube::Helm::Repo.new("bitnami", url: "https://charts.bitnami.com/bitnami")
+  repo.oci?.should.be.false
+end
+
+# ── add / update / remove ────────────────────────────────────────────
+
+it "add_returns_self_for_oci" do
+  repo = Kube::Helm::Repo.new("ghcr", url: "oci://ghcr.io/my-org/charts")
+  repo.add.should == repo
+end
+
+it "update_returns_self_for_oci" do
+  repo = Kube::Helm::Repo.new("ghcr", url: "oci://ghcr.io/my-org/charts")
+  repo.update.should == repo
+end
+
+it "remove_returns_self_for_oci" do
+  repo = Kube::Helm::Repo.new("ghcr", url: "oci://ghcr.io/my-org/charts")
+  repo.remove.should == repo
+end
+
+it "add_runs_helm_repo_add" do
+  repo = Kube::Helm::Repo.new("bitnami", url: "https://charts.bitnami.com/bitnami")
+
+  captured_cmd = nil
+  original = Kube::Helm.method(:run)
+  Kube::Helm.define_singleton_method(:run) { |cmd| captured_cmd = cmd; "" }
+  begin
+    result = repo.add
+    result.should == repo
+  ensure
+    Kube::Helm.define_singleton_method(:run, original)
+  end
+end
+
+it "update_runs_helm_repo_update" do
+  repo = Kube::Helm::Repo.new("bitnami", url: "https://charts.bitnami.com/bitnami")
+
+  captured_cmd = nil
+  original = Kube::Helm.method(:run)
+  Kube::Helm.define_singleton_method(:run) { |cmd| captured_cmd = cmd; "" }
+  begin
+    repo.update
+  ensure
+    Kube::Helm.define_singleton_method(:run, original)
   end
 
-  it "raises_on_empty_name" do
-    lambda {
-      Kube::Helm::Repo.new("", url: "https://charts.example.com")
-    }.should.raise ArgumentError
+  captured_cmd.should.include "update"
+end
+
+it "remove_runs_helm_repo_remove" do
+  repo = Kube::Helm::Repo.new("bitnami", url: "https://charts.bitnami.com/bitnami")
+
+  captured_cmd = nil
+  original = Kube::Helm.method(:run)
+  Kube::Helm.define_singleton_method(:run) { |cmd| captured_cmd = cmd; "" }
+  begin
+    repo.remove
+  ensure
+    Kube::Helm.define_singleton_method(:run, original)
   end
 
-  it "raises_on_nil_name" do
-    lambda {
-      Kube::Helm::Repo.new(nil, url: "https://charts.example.com")
-    }.should.raise ArgumentError
+  captured_cmd.should.include "remove"
+end
+
+# ── fetch ────────────────────────────────────────────────────────────
+
+it "fetch_returns_chart_with_metadata" do
+  repo = Kube::Helm::Repo.new("bitnami", url: "https://charts.bitnami.com/bitnami")
+
+  stub_chart_yaml = {
+    "name" => "nginx",
+    "version" => "18.1.0",
+    "appVersion" => "1.25.0",
+  }.to_yaml
+
+  captured_cmds = []
+  original = Kube::Helm.method(:run)
+  Kube::Helm.define_singleton_method(:run) { |cmd|
+    captured_cmds << cmd
+    cmd.include?("show") ? stub_chart_yaml : ""
+  }
+  begin
+    chart = repo.fetch("nginx", version: "18.1.0")
+    chart.name.should == "nginx"
+  ensure
+    Kube::Helm.define_singleton_method(:run, original)
+  end
+end
+
+it "fetch_without_version" do
+  repo = Kube::Helm::Repo.new("bitnami", url: "https://charts.bitnami.com/bitnami")
+
+  stub_chart_yaml = { "name" => "nginx", "version" => "18.1.0" }.to_yaml
+
+  captured_cmds = []
+  original = Kube::Helm.method(:run)
+  Kube::Helm.define_singleton_method(:run) { |cmd|
+    captured_cmds << cmd
+    cmd.include?("show") ? stub_chart_yaml : ""
+  }
+  begin
+    chart = repo.fetch("nginx")
+    chart.should.be.instance_of Kube::Helm::Chart
+  ensure
+    Kube::Helm.define_singleton_method(:run, original)
+  end
+end
+
+it "fetch_propagates_cluster" do
+  cluster = Kube::Cluster.connect(kubeconfig: "/tmp/test-kubeconfig")
+  repo = Kube::Helm::Repo.new("bitnami", url: "https://charts.bitnami.com/bitnami", cluster: cluster)
+
+  stub_chart_yaml = { "name" => "nginx", "version" => "18.1.0" }.to_yaml
+
+  helm = cluster.connection.helm
+  original = helm.method(:run)
+  helm.define_singleton_method(:run) { |cmd|
+    cmd.include?("show") ? stub_chart_yaml : ""
+  }
+  begin
+    chart = repo.fetch("nginx", version: "18.1.0")
+    chart.cluster.should == cluster
+  ensure
+    helm.define_singleton_method(:run, original)
+  end
+end
+
+# ── cluster scoping ──────────────────────────────────────────────────
+
+it "initializes_without_cluster" do
+  repo = Kube::Helm::Repo.new("bitnami", url: "https://charts.bitnami.com/bitnami")
+  repo.cluster.should.be.nil
+end
+
+it "initializes_with_cluster" do
+  cluster = Kube::Cluster.connect(kubeconfig: "/tmp/test-kubeconfig")
+  repo = Kube::Helm::Repo.new("bitnami", url: "https://charts.bitnami.com/bitnami", cluster: cluster)
+  repo.cluster.should == cluster
+end
+
+it "add_uses_cluster_helm_instance" do
+  cluster = Kube::Cluster.connect(kubeconfig: "/tmp/test-kubeconfig")
+  repo = Kube::Helm::Repo.new("bitnami", url: "https://charts.bitnami.com/bitnami", cluster: cluster)
+
+  captured_cmd = nil
+  helm = cluster.connection.helm
+  original = helm.method(:run)
+  helm.define_singleton_method(:run) { |cmd| captured_cmd = cmd; "" }
+  begin
+    repo.add
+  ensure
+    helm.define_singleton_method(:run, original)
   end
 
-  # ── oci? delegation ──────────────────────────────────────────────────
+  captured_cmd.should.include "add"
+end
 
-  it "oci_returns_true_for_oci_url" do
-    repo = Kube::Helm::Repo.new("ghcr", url: "oci://ghcr.io/my-org/charts")
-    repo.oci?.should.be.true
-  end
+# ── to_s ──────────────────────────────────────────────────────────────
 
-  it "oci_returns_false_for_http_url" do
-    repo = Kube::Helm::Repo.new("bitnami", url: "https://charts.bitnami.com/bitnami")
-    repo.oci?.should.be.false
-  end
-
-  # ── add / update / remove ────────────────────────────────────────────
-
-  it "add_returns_self_for_oci" do
-    repo = Kube::Helm::Repo.new("ghcr", url: "oci://ghcr.io/my-org/charts")
-    repo.add.should == repo
-  end
-
-  it "update_returns_self_for_oci" do
-    repo = Kube::Helm::Repo.new("ghcr", url: "oci://ghcr.io/my-org/charts")
-    repo.update.should == repo
-  end
-
-  it "remove_returns_self_for_oci" do
-    repo = Kube::Helm::Repo.new("ghcr", url: "oci://ghcr.io/my-org/charts")
-    repo.remove.should == repo
-  end
-
-  it "add_runs_helm_repo_add" do
-    repo = Kube::Helm::Repo.new("bitnami", url: "https://charts.bitnami.com/bitnami")
-
-    captured_cmd = nil
-    original = Kube::Helm.method(:run)
-    Kube::Helm.define_singleton_method(:run) { |cmd| captured_cmd = cmd; "" }
-    begin
-      result = repo.add
-      result.should == repo
-    ensure
-      Kube::Helm.define_singleton_method(:run, original)
-    end
-  end
-
-  it "update_runs_helm_repo_update" do
-    repo = Kube::Helm::Repo.new("bitnami", url: "https://charts.bitnami.com/bitnami")
-
-    captured_cmd = nil
-    original = Kube::Helm.method(:run)
-    Kube::Helm.define_singleton_method(:run) { |cmd| captured_cmd = cmd; "" }
-    begin
-      repo.update
-    ensure
-      Kube::Helm.define_singleton_method(:run, original)
-    end
-
-    captured_cmd.should.include "update"
-  end
-
-  it "remove_runs_helm_repo_remove" do
-    repo = Kube::Helm::Repo.new("bitnami", url: "https://charts.bitnami.com/bitnami")
-
-    captured_cmd = nil
-    original = Kube::Helm.method(:run)
-    Kube::Helm.define_singleton_method(:run) { |cmd| captured_cmd = cmd; "" }
-    begin
-      repo.remove
-    ensure
-      Kube::Helm.define_singleton_method(:run, original)
-    end
-
-    captured_cmd.should.include "remove"
-  end
-
-  # ── fetch ────────────────────────────────────────────────────────────
-
-  it "fetch_returns_chart_with_metadata" do
-    repo = Kube::Helm::Repo.new("bitnami", url: "https://charts.bitnami.com/bitnami")
-
-    stub_chart_yaml = {
-      "name" => "nginx",
-      "version" => "18.1.0",
-      "appVersion" => "1.25.0",
-    }.to_yaml
-
-    captured_cmds = []
-    original = Kube::Helm.method(:run)
-    Kube::Helm.define_singleton_method(:run) { |cmd|
-      captured_cmds << cmd
-      cmd.include?("show") ? stub_chart_yaml : ""
-    }
-    begin
-      chart = repo.fetch("nginx", version: "18.1.0")
-      chart.name.should == "nginx"
-    ensure
-      Kube::Helm.define_singleton_method(:run, original)
-    end
-  end
-
-  it "fetch_without_version" do
-    repo = Kube::Helm::Repo.new("bitnami", url: "https://charts.bitnami.com/bitnami")
-
-    stub_chart_yaml = { "name" => "nginx", "version" => "18.1.0" }.to_yaml
-
-    captured_cmds = []
-    original = Kube::Helm.method(:run)
-    Kube::Helm.define_singleton_method(:run) { |cmd|
-      captured_cmds << cmd
-      cmd.include?("show") ? stub_chart_yaml : ""
-    }
-    begin
-      chart = repo.fetch("nginx")
-      chart.should.be.instance_of Kube::Helm::Chart
-    ensure
-      Kube::Helm.define_singleton_method(:run, original)
-    end
-  end
-
-  it "fetch_propagates_cluster" do
-    cluster = Kube::Cluster.connect(kubeconfig: "/tmp/test-kubeconfig")
-    repo = Kube::Helm::Repo.new("bitnami", url: "https://charts.bitnami.com/bitnami", cluster: cluster)
-
-    stub_chart_yaml = { "name" => "nginx", "version" => "18.1.0" }.to_yaml
-
-    helm = cluster.connection.helm
-    original = helm.method(:run)
-    helm.define_singleton_method(:run) { |cmd|
-      cmd.include?("show") ? stub_chart_yaml : ""
-    }
-    begin
-      chart = repo.fetch("nginx", version: "18.1.0")
-      chart.cluster.should == cluster
-    ensure
-      helm.define_singleton_method(:run, original)
-    end
-  end
-
-  # ── cluster scoping ──────────────────────────────────────────────────
-
-  it "initializes_without_cluster" do
-    repo = Kube::Helm::Repo.new("bitnami", url: "https://charts.bitnami.com/bitnami")
-    repo.cluster.should.be.nil
-  end
-
-  it "initializes_with_cluster" do
-    cluster = Kube::Cluster.connect(kubeconfig: "/tmp/test-kubeconfig")
-    repo = Kube::Helm::Repo.new("bitnami", url: "https://charts.bitnami.com/bitnami", cluster: cluster)
-    repo.cluster.should == cluster
-  end
-
-  it "add_uses_cluster_helm_instance" do
-    cluster = Kube::Cluster.connect(kubeconfig: "/tmp/test-kubeconfig")
-    repo = Kube::Helm::Repo.new("bitnami", url: "https://charts.bitnami.com/bitnami", cluster: cluster)
-
-    captured_cmd = nil
-    helm = cluster.connection.helm
-    original = helm.method(:run)
-    helm.define_singleton_method(:run) { |cmd| captured_cmd = cmd; "" }
-    begin
-      repo.add
-    ensure
-      helm.define_singleton_method(:run, original)
-    end
-
-    captured_cmd.should.include "add"
-  end
-
-  # ── to_s ──────────────────────────────────────────────────────────────
-
-  it "to_s" do
-    repo = Kube::Helm::Repo.new("bitnami", url: "https://charts.bitnami.com/bitnami")
-    repo.to_s.should == "bitnami (https://charts.bitnami.com/bitnami)"
-  end
+it "to_s" do
+  repo = Kube::Helm::Repo.new("bitnami", url: "https://charts.bitnami.com/bitnami")
+  repo.to_s.should == "bitnami (https://charts.bitnami.com/bitnami)"
 end

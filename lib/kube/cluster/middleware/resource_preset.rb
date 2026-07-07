@@ -68,163 +68,163 @@ module Kube
   end
 end
 
-test do
-  Middleware = Kube::Cluster::Middleware
+__END__
 
-  it "injects_small_preset_into_deployment" do
-    m = manifest(Kube::Cluster["Deployment"].new {
-      metadata.name = "web"
-      metadata.labels = { "app.kubernetes.io/size": "small" }
-      spec.selector.matchLabels = { app: "web" }
-      spec.template.metadata.labels = { app: "web" }
-      spec.template.spec.containers = [
-        { name: "web", image: "nginx:latest" },
-      ]
-    })
+Middleware = Kube::Cluster::Middleware
 
-    Middleware::ResourcePreset.new.call(m)
-    container = m.resources.first.to_h.dig(:spec, :template, :spec, :containers, 0)
+it "injects_small_preset_into_deployment" do
+  m = manifest(Kube::Cluster["Deployment"].new {
+    metadata.name = "web"
+    metadata.labels = { "app.kubernetes.io/size": "small" }
+    spec.selector.matchLabels = { app: "web" }
+    spec.template.metadata.labels = { app: "web" }
+    spec.template.spec.containers = [
+      { name: "web", image: "nginx:latest" },
+    ]
+  })
 
-    container.dig(:resources, :requests, :cpu).should == "500m"
-  end
+  Middleware::ResourcePreset.new.call(m)
+  container = m.resources.first.to_h.dig(:spec, :template, :spec, :containers, 0)
 
-  it "injects_nano_preset" do
-    m = manifest(Kube::Cluster["Deployment"].new {
-      metadata.name = "tiny"
-      metadata.labels = { "app.kubernetes.io/size": "nano" }
-      spec.selector.matchLabels = { app: "tiny" }
-      spec.template.metadata.labels = { app: "tiny" }
-      spec.template.spec.containers = [
-        { name: "app", image: "app:latest" },
-      ]
-    })
-
-    Middleware::ResourcePreset.new.call(m)
-    container = m.resources.first.to_h.dig(:spec, :template, :spec, :containers, 0)
-
-    container.dig(:resources, :requests, :cpu).should == "100m"
-  end
-
-  it "injects_xlarge_preset" do
-    m = manifest(Kube::Cluster["Deployment"].new {
-      metadata.name = "big"
-      metadata.labels = { "app.kubernetes.io/size": "xlarge" }
-      spec.selector.matchLabels = { app: "big" }
-      spec.template.metadata.labels = { app: "big" }
-      spec.template.spec.containers = [
-        { name: "app", image: "app:latest" },
-      ]
-    })
-
-    Middleware::ResourcePreset.new.call(m)
-    container = m.resources.first.to_h.dig(:spec, :template, :spec, :containers, 0)
-
-    container.dig(:resources, :limits, :cpu).should == "3"
-  end
-
-  it "applies_to_all_containers" do
-    m = manifest(Kube::Cluster["Deployment"].new {
-      metadata.name = "multi"
-      metadata.labels = { "app.kubernetes.io/size": "micro" }
-      spec.selector.matchLabels = { app: "multi" }
-      spec.template.metadata.labels = { app: "multi" }
-      spec.template.spec.containers = [
-        { name: "app", image: "app:latest" },
-        { name: "sidecar", image: "sidecar:latest" },
-      ]
-    })
-
-    Middleware::ResourcePreset.new.call(m)
-    containers = m.resources.first.to_h.dig(:spec, :template, :spec, :containers)
-
-    containers.last.dig(:resources, :requests, :cpu).should == "250m"
-  end
-
-  it "skips_non_pod_bearing_resources" do
-    resource = Kube::Cluster["ConfigMap"].new {
-      metadata.name = "config"
-      metadata.labels = { "app.kubernetes.io/size": "small" }
-    }
-    m = manifest(resource)
-
-    Middleware::ResourcePreset.new.call(m)
-
-    m.resources.first.to_h.should == resource.to_h
-  end
-
-  it "skips_resources_without_size_label" do
-    m = manifest(Kube::Cluster["Deployment"].new {
-      metadata.name = "web"
-      spec.selector.matchLabels = { app: "web" }
-      spec.template.metadata.labels = { app: "web" }
-      spec.template.spec.containers = [
-        { name: "web", image: "nginx:latest" },
-      ]
-    })
-
-    Middleware::ResourcePreset.new.call(m)
-    container = m.resources.first.to_h.dig(:spec, :template, :spec, :containers, 0)
-
-    container[:resources].should.be.nil
-  end
-
-  it "raises_on_unknown_size" do
-    m = manifest(Kube::Cluster["Deployment"].new {
-      metadata.name = "web"
-      metadata.labels = { "app.kubernetes.io/size": "potato" }
-      spec.selector.matchLabels = { app: "web" }
-      spec.template.metadata.labels = { app: "web" }
-      spec.template.spec.containers = [
-        { name: "web", image: "nginx:latest" },
-      ]
-    })
-
-    lambda { Middleware::ResourcePreset.new.call(m) }.should.raise ArgumentError
-  end
-
-  it "applies_to_statefulset" do
-    m = manifest(Kube::Cluster["StatefulSet"].new {
-      metadata.name = "db"
-      metadata.labels = { "app.kubernetes.io/size": "medium" }
-      spec.selector.matchLabels = { app: "db" }
-      spec.template.metadata.labels = { app: "db" }
-      spec.template.spec.containers = [
-        { name: "postgres", image: "postgres:16" },
-      ]
-    })
-
-    Middleware::ResourcePreset.new.call(m)
-    container = m.resources.first.to_h.dig(:spec, :template, :spec, :containers, 0)
-
-    container.dig(:resources, :requests, :cpu).should == "500m"
-  end
-
-  it "preserves_existing_container_resources_via_deep_merge" do
-    m = manifest(Kube::Cluster["Deployment"].new {
-      metadata.name = "web"
-      metadata.labels = { "app.kubernetes.io/size": "small" }
-      spec.selector.matchLabels = { app: "web" }
-      spec.template.metadata.labels = { app: "web" }
-      spec.template.spec.containers = [
-        {
-          name: "web", image: "nginx:latest",
-          resources: { requests: { cpu: "999m" } },
-        },
-      ]
-    })
-
-    Middleware::ResourcePreset.new.call(m)
-    container = m.resources.first.to_h.dig(:spec, :template, :spec, :containers, 0)
-
-    # The container's explicit value wins over the preset
-    container.dig(:resources, :requests, :cpu).should == "999m"
-  end
-
-  private
-
-    def manifest(*resources)
-      m = Kube::Cluster::Manifest.new
-      resources.each { |r| m << r }
-      m
-    end
+  container.dig(:resources, :requests, :cpu).should == "500m"
 end
+
+it "injects_nano_preset" do
+  m = manifest(Kube::Cluster["Deployment"].new {
+    metadata.name = "tiny"
+    metadata.labels = { "app.kubernetes.io/size": "nano" }
+    spec.selector.matchLabels = { app: "tiny" }
+    spec.template.metadata.labels = { app: "tiny" }
+    spec.template.spec.containers = [
+      { name: "app", image: "app:latest" },
+    ]
+  })
+
+  Middleware::ResourcePreset.new.call(m)
+  container = m.resources.first.to_h.dig(:spec, :template, :spec, :containers, 0)
+
+  container.dig(:resources, :requests, :cpu).should == "100m"
+end
+
+it "injects_xlarge_preset" do
+  m = manifest(Kube::Cluster["Deployment"].new {
+    metadata.name = "big"
+    metadata.labels = { "app.kubernetes.io/size": "xlarge" }
+    spec.selector.matchLabels = { app: "big" }
+    spec.template.metadata.labels = { app: "big" }
+    spec.template.spec.containers = [
+      { name: "app", image: "app:latest" },
+    ]
+  })
+
+  Middleware::ResourcePreset.new.call(m)
+  container = m.resources.first.to_h.dig(:spec, :template, :spec, :containers, 0)
+
+  container.dig(:resources, :limits, :cpu).should == "3"
+end
+
+it "applies_to_all_containers" do
+  m = manifest(Kube::Cluster["Deployment"].new {
+    metadata.name = "multi"
+    metadata.labels = { "app.kubernetes.io/size": "micro" }
+    spec.selector.matchLabels = { app: "multi" }
+    spec.template.metadata.labels = { app: "multi" }
+    spec.template.spec.containers = [
+      { name: "app", image: "app:latest" },
+      { name: "sidecar", image: "sidecar:latest" },
+    ]
+  })
+
+  Middleware::ResourcePreset.new.call(m)
+  containers = m.resources.first.to_h.dig(:spec, :template, :spec, :containers)
+
+  containers.last.dig(:resources, :requests, :cpu).should == "250m"
+end
+
+it "skips_non_pod_bearing_resources" do
+  resource = Kube::Cluster["ConfigMap"].new {
+    metadata.name = "config"
+    metadata.labels = { "app.kubernetes.io/size": "small" }
+  }
+  m = manifest(resource)
+
+  Middleware::ResourcePreset.new.call(m)
+
+  m.resources.first.to_h.should == resource.to_h
+end
+
+it "skips_resources_without_size_label" do
+  m = manifest(Kube::Cluster["Deployment"].new {
+    metadata.name = "web"
+    spec.selector.matchLabels = { app: "web" }
+    spec.template.metadata.labels = { app: "web" }
+    spec.template.spec.containers = [
+      { name: "web", image: "nginx:latest" },
+    ]
+  })
+
+  Middleware::ResourcePreset.new.call(m)
+  container = m.resources.first.to_h.dig(:spec, :template, :spec, :containers, 0)
+
+  container[:resources].should.be.nil
+end
+
+it "raises_on_unknown_size" do
+  m = manifest(Kube::Cluster["Deployment"].new {
+    metadata.name = "web"
+    metadata.labels = { "app.kubernetes.io/size": "potato" }
+    spec.selector.matchLabels = { app: "web" }
+    spec.template.metadata.labels = { app: "web" }
+    spec.template.spec.containers = [
+      { name: "web", image: "nginx:latest" },
+    ]
+  })
+
+  lambda { Middleware::ResourcePreset.new.call(m) }.should.raise ArgumentError
+end
+
+it "applies_to_statefulset" do
+  m = manifest(Kube::Cluster["StatefulSet"].new {
+    metadata.name = "db"
+    metadata.labels = { "app.kubernetes.io/size": "medium" }
+    spec.selector.matchLabels = { app: "db" }
+    spec.template.metadata.labels = { app: "db" }
+    spec.template.spec.containers = [
+      { name: "postgres", image: "postgres:16" },
+    ]
+  })
+
+  Middleware::ResourcePreset.new.call(m)
+  container = m.resources.first.to_h.dig(:spec, :template, :spec, :containers, 0)
+
+  container.dig(:resources, :requests, :cpu).should == "500m"
+end
+
+it "preserves_existing_container_resources_via_deep_merge" do
+  m = manifest(Kube::Cluster["Deployment"].new {
+    metadata.name = "web"
+    metadata.labels = { "app.kubernetes.io/size": "small" }
+    spec.selector.matchLabels = { app: "web" }
+    spec.template.metadata.labels = { app: "web" }
+    spec.template.spec.containers = [
+      {
+        name: "web", image: "nginx:latest",
+        resources: { requests: { cpu: "999m" } },
+      },
+    ]
+  })
+
+  Middleware::ResourcePreset.new.call(m)
+  container = m.resources.first.to_h.dig(:spec, :template, :spec, :containers, 0)
+
+  # The container's explicit value wins over the preset
+  container.dig(:resources, :requests, :cpu).should == "999m"
+end
+
+private
+
+  def manifest(*resources)
+    m = Kube::Cluster::Manifest.new
+    resources.each { |r| m << r }
+    m
+  end

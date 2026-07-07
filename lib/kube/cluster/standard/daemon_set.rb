@@ -54,17 +54,17 @@ module Kube
   end
 end
 
-test do
-  describe "DaemonSet" do
-    it "initializes without error" do
-      Kube::Cluster::Standard::DaemonSet
-        .new(
-          name: "my-daemon",
-          image: "busybox",
-        )
-        .to_yaml
-        .is_a?(String)
-        .should == true
-    end
+__END__
+
+describe "DaemonSet" do
+  it "initializes without error" do
+    Kube::Cluster::Standard::DaemonSet
+      .new(
+        name: "my-daemon",
+        image: "busybox",
+      )
+      .to_yaml
+      .is_a?(String)
+      .should == true
   end
 end

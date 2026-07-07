@@ -38,16 +38,16 @@ module Kube
   end
 end
 
-test do
-  describe "RoleBinding" do
-    it "references the role and service account" do
-      yaml = Kube::Cluster::Standard::RoleBinding.new(
-        role: Kube::Cluster::Standard::Role.new(name: "r", rules: ["secrets" => %w[get]]),
-        service_account: Kube::Cluster::Standard::ServiceAccount.new(name: "sa"),
-      ).to_yaml
+__END__
 
-      yaml.include?("name: r").should == true
-      yaml.include?("name: sa").should == true
-    end
+describe "RoleBinding" do
+  it "references the role and service account" do
+    yaml = Kube::Cluster::Standard::RoleBinding.new(
+      role: Kube::Cluster::Standard::Role.new(name: "r", rules: ["secrets" => %w[get]]),
+      service_account: Kube::Cluster::Standard::ServiceAccount.new(name: "sa"),
+    ).to_yaml
+
+    yaml.include?("name: r").should == true
+    yaml.include?("name: sa").should == true
   end
 end

@@ -77,79 +77,79 @@ module Kube
   end
 end
 
-test do
-  # ── OCI detection ──────────────────────────────────────────────────────
+__END__
 
-  it "oci_endpoint_detected" do
-    endpoint = Kube::Helm::Endpoint.new("oci://ghcr.io/my-org/charts")
-    endpoint.oci?.should.be.true
-  end
+# ── OCI detection ──────────────────────────────────────────────────────
 
-  it "http_endpoint_not_oci" do
-    endpoint = Kube::Helm::Endpoint.new("https://charts.bitnami.com/bitnami")
-    endpoint.oci?.should.be.false
-  end
+it "oci_endpoint_detected" do
+  endpoint = Kube::Helm::Endpoint.new("oci://ghcr.io/my-org/charts")
+  endpoint.oci?.should.be.true
+end
 
-  # ── requires_add? ─────────────────────────────────────────────────────
+it "http_endpoint_not_oci" do
+  endpoint = Kube::Helm::Endpoint.new("https://charts.bitnami.com/bitnami")
+  endpoint.oci?.should.be.false
+end
 
-  it "oci_does_not_require_add" do
-    endpoint = Kube::Helm::Endpoint.new("oci://ghcr.io/my-org/charts")
-    endpoint.requires_add?.should.be.false
-  end
+# ── requires_add? ─────────────────────────────────────────────────────
 
-  it "http_requires_add" do
-    endpoint = Kube::Helm::Endpoint.new("https://charts.bitnami.com/bitnami")
-    endpoint.requires_add?.should.be.true
-  end
+it "oci_does_not_require_add" do
+  endpoint = Kube::Helm::Endpoint.new("oci://ghcr.io/my-org/charts")
+  endpoint.requires_add?.should.be.false
+end
 
-  # ── chart_ref ──────────────────────────────────────────────────────────
+it "http_requires_add" do
+  endpoint = Kube::Helm::Endpoint.new("https://charts.bitnami.com/bitnami")
+  endpoint.requires_add?.should.be.true
+end
 
-  it "oci_chart_ref" do
-    endpoint = Kube::Helm::Endpoint.new("oci://ghcr.io/my-org/charts")
-    endpoint.chart_ref("nginx").should == "oci://ghcr.io/my-org/charts/nginx"
-  end
+# ── chart_ref ──────────────────────────────────────────────────────────
 
-  it "oci_chart_ref_strips_trailing_slash" do
-    endpoint = Kube::Helm::Endpoint.new("oci://ghcr.io/my-org/charts/")
-    endpoint.chart_ref("nginx").should == "oci://ghcr.io/my-org/charts/nginx"
-  end
+it "oci_chart_ref" do
+  endpoint = Kube::Helm::Endpoint.new("oci://ghcr.io/my-org/charts")
+  endpoint.chart_ref("nginx").should == "oci://ghcr.io/my-org/charts/nginx"
+end
 
-  it "http_chart_ref_with_repo_name" do
-    endpoint = Kube::Helm::Endpoint.new("https://charts.bitnami.com/bitnami")
-    endpoint.chart_ref("nginx", repo_name: "bitnami").should == "bitnami/nginx"
-  end
+it "oci_chart_ref_strips_trailing_slash" do
+  endpoint = Kube::Helm::Endpoint.new("oci://ghcr.io/my-org/charts/")
+  endpoint.chart_ref("nginx").should == "oci://ghcr.io/my-org/charts/nginx"
+end
 
-  it "http_chart_ref_raises_without_repo_name" do
-    endpoint = Kube::Helm::Endpoint.new("https://charts.bitnami.com/bitnami")
-    lambda { endpoint.chart_ref("nginx") }.should.raise ArgumentError
-  end
+it "http_chart_ref_with_repo_name" do
+  endpoint = Kube::Helm::Endpoint.new("https://charts.bitnami.com/bitnami")
+  endpoint.chart_ref("nginx", repo_name: "bitnami").should == "bitnami/nginx"
+end
 
-  # ── validation ─────────────────────────────────────────────────────────
+it "http_chart_ref_raises_without_repo_name" do
+  endpoint = Kube::Helm::Endpoint.new("https://charts.bitnami.com/bitnami")
+  lambda { endpoint.chart_ref("nginx") }.should.raise ArgumentError
+end
 
-  it "raises_on_empty_url" do
-    lambda { Kube::Helm::Endpoint.new("") }.should.raise ArgumentError
-  end
+# ── validation ─────────────────────────────────────────────────────────
 
-  it "raises_on_non_string_url" do
-    lambda { Kube::Helm::Endpoint.new(nil) }.should.raise ArgumentError
-  end
+it "raises_on_empty_url" do
+  lambda { Kube::Helm::Endpoint.new("") }.should.raise ArgumentError
+end
 
-  # ── to_s / equality ───────────────────────────────────────────────────
+it "raises_on_non_string_url" do
+  lambda { Kube::Helm::Endpoint.new(nil) }.should.raise ArgumentError
+end
 
-  it "to_s_returns_url" do
-    endpoint = Kube::Helm::Endpoint.new("https://charts.example.com")
-    endpoint.to_s.should == "https://charts.example.com"
-  end
+# ── to_s / equality ───────────────────────────────────────────────────
 
-  it "equality" do
-    a = Kube::Helm::Endpoint.new("https://charts.example.com")
-    b = Kube::Helm::Endpoint.new("https://charts.example.com")
-    a.should == b
-  end
+it "to_s_returns_url" do
+  endpoint = Kube::Helm::Endpoint.new("https://charts.example.com")
+  endpoint.to_s.should == "https://charts.example.com"
+end
 
-  it "inequality" do
-    a = Kube::Helm::Endpoint.new("https://charts.example.com")
-    b = Kube::Helm::Endpoint.new("oci://ghcr.io/my-org/charts")
-    a.should.not == b
-  end
+it "equality" do
+  a = Kube::Helm::Endpoint.new("https://charts.example.com")
+  b = Kube::Helm::Endpoint.new("https://charts.example.com")
+  a.should == b
+end
+
+it "inequality" do
+  a = Kube::Helm::Endpoint.new("https://charts.example.com")
+  b = Kube::Helm::Endpoint.new("oci://ghcr.io/my-org/charts")
+  a.should.not == b
 end

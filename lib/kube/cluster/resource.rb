@@ -129,24 +129,24 @@ module Kube
   end
 end
 
-test do
-  class ExampleServiceSubclass < Kube::Cluster["Service"]
-    def initialize(name:, port:, **options, &block)
-      super() {
-        metadata.name = name
-        metadata.labels = { "app" => name }
-        spec.selector = { "app" => name }
-        spec.ports = [{ port: port, targetPort: port, protocol: "TCP" }]
+__END__
 
-        instance_exec(&block) if block_given?
-      }
+class ExampleServiceSubclass < Kube::Cluster["Service"]
+  def initialize(name:, port:, **options, &block)
+    super() {
+      metadata.name = name
+      metadata.labels = { "app" => name }
+      spec.selector = { "app" => name }
+      spec.ports = [{ port: port, targetPort: port, protocol: "TCP" }]
 
-    end
+      instance_exec(&block) if block_given?
+    }
+
   end
+end
 
-  it "rebuilds properly" do
-    ExampleServiceSubclass.new(name: "example-service", port: 3000).tap do |service|
-      lambda{ service.rebuild(**service.to_h) }.should.not.raise
-    end
+it "rebuilds properly" do
+  ExampleServiceSubclass.new(name: "example-service", port: 3000).tap do |service|
+    lambda{ service.rebuild(**service.to_h) }.should.not.raise
   end
 end

@@ -59,18 +59,18 @@ module Kube
   end
 end
 
-test do
-  describe "MetaController::CompositeController" do
-    it "initializes without error" do
-      Kube::Cluster::Standard::MetaController::CompositeController
-        .new(
-          name: "my-controller",
-          webhook_url: "http://hook.default.svc/sync",
-          parent_resource: { apiVersion: "apps/v1", resource: "deployments" },
-        )
-        .to_yaml
-        .is_a?(String)
-        .should == true
-    end
+__END__
+
+describe "MetaController::CompositeController" do
+  it "initializes without error" do
+    Kube::Cluster::Standard::MetaController::CompositeController
+      .new(
+        name: "my-controller",
+        webhook_url: "http://hook.default.svc/sync",
+        parent_resource: { apiVersion: "apps/v1", resource: "deployments" },
+      )
+      .to_yaml
+      .is_a?(String)
+      .should == true
   end
 end

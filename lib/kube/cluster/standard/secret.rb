@@ -29,16 +29,16 @@ module Kube
   end
 end
 
-test do
-  describe "Secret" do
-    it "initializes without error" do
-      Kube::Cluster::Standard::Secret
-        .new(
-          name: "my-secret"
-        )
-        .to_yaml
-        .is_a?(String)
-        .should == true
-    end
+__END__
+
+describe "Secret" do
+  it "initializes without error" do
+    Kube::Cluster::Standard::Secret
+      .new(
+        name: "my-secret"
+      )
+      .to_yaml
+      .is_a?(String)
+      .should == true
   end
 end

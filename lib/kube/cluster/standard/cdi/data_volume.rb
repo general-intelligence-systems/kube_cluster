@@ -20,16 +20,16 @@ module Kube
   end
 end
 
-test do
-  #describe "CDI::DataVolume" do
-  #  it "initializes without error" do
-  #    Kube::Cluster::Standard::CDI::DataVolume
-  #      .new(
-  #        name: "my-example-volume"
-  #      )
-  #      .to_yaml
-  #      .is_a?(String)
-  #      .should == true
-  #  end
-  #end
-end
+__END__
+
+#describe "CDI::DataVolume" do
+#  it "initializes without error" do
+#    Kube::Cluster::Standard::CDI::DataVolume
+#      .new(
+#        name: "my-example-volume"
+#      )
+#      .to_yaml
+#      .is_a?(String)
+#      .should == true
+#  end
+#end

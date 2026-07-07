@@ -27,14 +27,14 @@ module Kube
   end
 end
 
-test do
-  describe "ServiceAccount" do
-    it "initializes without error" do
-      Kube::Cluster::Standard::ServiceAccount
-        .new(name: "my-sa")
-        .to_yaml
-        .is_a?(String)
-        .should == true
-    end
+__END__
+
+describe "ServiceAccount" do
+  it "initializes without error" do
+    Kube::Cluster::Standard::ServiceAccount
+      .new(name: "my-sa")
+      .to_yaml
+      .is_a?(String)
+      .should == true
   end
 end

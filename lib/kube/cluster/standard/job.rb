@@ -34,17 +34,17 @@ module Kube
   end
 end
 
-test do
-  describe "Job" do
-    it "initializes without error" do
-      Kube::Cluster::Standard::Job
-        .new(
-          name: "my-job",
-          image: "nixery.dev/cowsay", # nixery.dev is pretty sick, mate!
-        )
-        .to_yaml
-        .is_a?(String)
-        .should == true
-    end
+__END__
+
+describe "Job" do
+  it "initializes without error" do
+    Kube::Cluster::Standard::Job
+      .new(
+        name: "my-job",
+        image: "nixery.dev/cowsay", # nixery.dev is pretty sick, mate!
+      )
+      .to_yaml
+      .is_a?(String)
+      .should == true
   end
 end

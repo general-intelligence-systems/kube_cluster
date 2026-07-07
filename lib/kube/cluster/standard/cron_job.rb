@@ -39,18 +39,18 @@ module Kube
   end
 end
 
-test do
-  describe "CronJob" do
-    it "initializes without error" do
-      Kube::Cluster::Standard::CronJob
-        .new(
-          name: "my-cron",
-          image: "nixery.dev/shell/kubectl",
-          schedule: "*/5 * * * *",
-        )
-        .to_yaml
-        .is_a?(String)
-        .should == true
-    end
+__END__
+
+describe "CronJob" do
+  it "initializes without error" do
+    Kube::Cluster::Standard::CronJob
+      .new(
+        name: "my-cron",
+        image: "nixery.dev/shell/kubectl",
+        schedule: "*/5 * * * *",
+      )
+      .to_yaml
+      .is_a?(String)
+      .should == true
   end
 end

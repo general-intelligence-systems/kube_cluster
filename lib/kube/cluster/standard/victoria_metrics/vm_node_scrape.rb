@@ -29,14 +29,14 @@ module Kube
   end
 end
 
-test do
-  describe "VictoriaMetrics::VMNodeScrape" do
-    it "initializes without error" do
-      Kube::Cluster::Standard::VictoriaMetrics::VMNodeScrape
-        .new(name: "kubelet", job: "kubelet", path: "/metrics")
-        .to_yaml
-        .is_a?(String)
-        .should == true
-    end
+__END__
+
+describe "VictoriaMetrics::VMNodeScrape" do
+  it "initializes without error" do
+    Kube::Cluster::Standard::VictoriaMetrics::VMNodeScrape
+      .new(name: "kubelet", job: "kubelet", path: "/metrics")
+      .to_yaml
+      .is_a?(String)
+      .should == true
   end
 end

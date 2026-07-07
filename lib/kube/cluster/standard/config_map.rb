@@ -30,16 +30,16 @@ module Kube
   end
 end
 
-test do
-  describe "ConfigMap" do
-    it "initializes without error" do
-      Kube::Cluster::Standard::ConfigMap
-        .new(
-          #name: "example-config"
-        )
-        .to_yaml
-        .is_a?(String)
-        .should == true
-    end
+__END__
+
+describe "ConfigMap" do
+  it "initializes without error" do
+    Kube::Cluster::Standard::ConfigMap
+      .new(
+        #name: "example-config"
+      )
+      .to_yaml
+      .is_a?(String)
+      .should == true
   end
 end

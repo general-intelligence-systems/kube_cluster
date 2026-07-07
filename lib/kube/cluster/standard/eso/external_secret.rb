@@ -79,18 +79,18 @@ module Kube
   end
 end
 
-test do
-  describe "ESO::ExternalSecret" do
-    it "initializes without error" do
-      Kube::Cluster::Standard::ESO::ExternalSecret
-        .new(
-          name: "my-external-secret",
-          store: "my-cluster-store",
-          remote_key: "secret/data/my-app",
-        )
-        .to_yaml
-        .is_a?(String)
-        .should == true
-    end
+__END__
+
+describe "ESO::ExternalSecret" do
+  it "initializes without error" do
+    Kube::Cluster::Standard::ESO::ExternalSecret
+      .new(
+        name: "my-external-secret",
+        store: "my-cluster-store",
+        remote_key: "secret/data/my-app",
+      )
+      .to_yaml
+      .is_a?(String)
+      .should == true
   end
 end

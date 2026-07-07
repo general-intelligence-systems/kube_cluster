@@ -45,22 +45,22 @@ module Kube
   end
 end
 
-test do
-  describe "EnvProcessing" do
-    it "maps a Secret::KeyRef to a secretKeyRef env var" do
-      secret = Kube::Cluster::Standard::Secret.new(name: "passbolt-db-creds")
+__END__
 
-      Kube::Cluster::Standard::EnvProcessing
-        .process("DB_PASSWORD" => secret.key("password"))
-        .should == [
-          { name: "DB_PASSWORD", valueFrom: { secretKeyRef: { name: "passbolt-db-creds", key: "password" } } }
-        ]
-    end
+describe "EnvProcessing" do
+  it "maps a Secret::KeyRef to a secretKeyRef env var" do
+    secret = Kube::Cluster::Standard::Secret.new(name: "passbolt-db-creds")
 
-    it "still maps plain string values to value env vars" do
-      Kube::Cluster::Standard::EnvProcessing
-        .process("FOO" => "bar")
-        .should == [{ name: "FOO", value: "bar" }]
-    end
+    Kube::Cluster::Standard::EnvProcessing
+      .process("DB_PASSWORD" => secret.key("password"))
+      .should == [
+        { name: "DB_PASSWORD", valueFrom: { secretKeyRef: { name: "passbolt-db-creds", key: "password" } } }
+      ]
+  end
+
+  it "still maps plain string values to value env vars" do
+    Kube::Cluster::Standard::EnvProcessing
+      .process("FOO" => "bar")
+      .should == [{ name: "FOO", value: "bar" }]
   end
 end

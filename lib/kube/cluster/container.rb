@@ -10,24 +10,24 @@ module Kube
   end
 end
 
-test do
-  it "creates a valid container" do
-    c = Kube::Cluster::Container.new(name: "app", image: "nginx:1.27")
-    c.valid?.should.be.true
-    c.name.should == "app"
-  end
+__END__
 
-  it "auto-coerces inside a Deployment" do
-    c = Kube::Cluster::Container.new(name: "app", image: "nginx:1.27")
+it "creates a valid container" do
+  c = Kube::Cluster::Container.new(name: "app", image: "nginx:1.27")
+  c.valid?.should.be.true
+  c.name.should == "app"
+end
 
-    deploy = Kube::Cluster["Deployment"].new {
-      metadata.name = "web"
-      spec.replicas = 1
-      spec.selector.matchLabels = { app: "web" }
-      spec.template.metadata.labels = { app: "web" }
-      spec.template.spec.containers = [c]
-    }
+it "auto-coerces inside a Deployment" do
+  c = Kube::Cluster::Container.new(name: "app", image: "nginx:1.27")
 
-    deploy.to_h[:spec][:template][:spec][:containers].first[:name].should == "app"
-  end
+  deploy = Kube::Cluster["Deployment"].new {
+    metadata.name = "web"
+    spec.replicas = 1
+    spec.selector.matchLabels = { app: "web" }
+    spec.template.metadata.labels = { app: "web" }
+    spec.template.spec.containers = [c]
+  }
+
+  deploy.to_h[:spec][:template][:spec][:containers].first[:name].should == "app"
 end

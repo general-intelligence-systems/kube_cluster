@@ -34,18 +34,18 @@ module Kube
   end
 end
 
-test do
-  describe "Perses::PersesDatasource" do
-    it "initializes without error" do
-      Kube::Cluster::Standard::Perses::PersesDatasource
-        .new(
-          name: "victoriametrics",
-          plugin_kind: "PrometheusDatasource",
-          url: "http://vmsingle-vmsingle.metrics.svc:8429",
-        )
-        .to_yaml
-        .is_a?(String)
-        .should == true
-    end
+__END__
+
+describe "Perses::PersesDatasource" do
+  it "initializes without error" do
+    Kube::Cluster::Standard::Perses::PersesDatasource
+      .new(
+        name: "victoriametrics",
+        plugin_kind: "PrometheusDatasource",
+        url: "http://vmsingle-vmsingle.metrics.svc:8429",
+      )
+      .to_yaml
+      .is_a?(String)
+      .should == true
   end
 end

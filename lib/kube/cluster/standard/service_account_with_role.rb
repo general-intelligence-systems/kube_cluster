@@ -41,15 +41,15 @@ module Kube
   end
 end
 
-test do
-  describe "ServiceAccountWithRole" do
-    it "emits the service account, role, and binding" do
-      m = Kube::Cluster::Standard::ServiceAccountWithRole.new(
-        service_account: Kube::Cluster::Standard::ServiceAccount.new(name: "sa"),
-        role: Kube::Cluster::Standard::Role.new(rules: ["secrets" => %w[get list]]),
-      )
+__END__
 
-      m.map { |r| r.to_h[:kind] }.sort.should == %w[Role RoleBinding ServiceAccount]
-    end
+describe "ServiceAccountWithRole" do
+  it "emits the service account, role, and binding" do
+    m = Kube::Cluster::Standard::ServiceAccountWithRole.new(
+      service_account: Kube::Cluster::Standard::ServiceAccount.new(name: "sa"),
+      role: Kube::Cluster::Standard::Role.new(rules: ["secrets" => %w[get list]]),
+    )
+
+    m.map { |r| r.to_h[:kind] }.sort.should == %w[Role RoleBinding ServiceAccount]
   end
 end

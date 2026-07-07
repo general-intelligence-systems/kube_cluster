@@ -32,14 +32,14 @@ module Kube
   end
 end
 
-test do
-  describe "Perses::Perses" do
-    it "initializes without error" do
-      Kube::Cluster::Standard::Perses::Perses
-        .new(name: "perses", image: "persesdev/perses:latest")
-        .to_yaml
-        .is_a?(String)
-        .should == true
-    end
+__END__
+
+describe "Perses::Perses" do
+  it "initializes without error" do
+    Kube::Cluster::Standard::Perses::Perses
+      .new(name: "perses", image: "persesdev/perses:latest")
+      .to_yaml
+      .is_a?(String)
+      .should == true
   end
 end

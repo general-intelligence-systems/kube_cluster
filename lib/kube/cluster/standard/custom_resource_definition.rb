@@ -66,17 +66,17 @@ module Kube
   end
 end
 
-test do
-  describe "CustomResourceDefinition" do
-    it "initializes without error" do
-      Kube::Cluster::Standard::CustomResourceDefinition
-        .new(
-          kind: "Widget",
-          group: "example.com",
-        )
-        .to_yaml
-        .is_a?(String)
-        .should == true
-    end
+__END__
+
+describe "CustomResourceDefinition" do
+  it "initializes without error" do
+    Kube::Cluster::Standard::CustomResourceDefinition
+      .new(
+        kind: "Widget",
+        group: "example.com",
+      )
+      .to_yaml
+      .is_a?(String)
+      .should == true
   end
 end

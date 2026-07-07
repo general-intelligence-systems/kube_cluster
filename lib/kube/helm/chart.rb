@@ -217,341 +217,98 @@ module Kube
   end
 end
 
-test do
-  # ── initialization ────────────────────────────────────────────────────
+__END__
 
-  it "initializes_with_data_hash" do
-    chart = Kube::Helm::Chart.new({ "name" => "my-app", "version" => "1.0.0", "appVersion" => "2.5.0" })
-    chart.name.should == "my-app"
+# ── initialization ────────────────────────────────────────────────────
+
+it "initializes_with_data_hash" do
+  chart = Kube::Helm::Chart.new({ "name" => "my-app", "version" => "1.0.0", "appVersion" => "2.5.0" })
+  chart.name.should == "my-app"
+end
+
+it "initializes_with_block" do
+  chart = Kube::Helm::Chart.new {
+    self.name = "my-app"
+    self.version = "1.0.0"
+    self.appVersion = "2.5.0"
+    self.description = "A test chart"
+  }
+
+  chart.description.should == "A test chart"
+end
+
+it "initializes_empty" do
+  chart = Kube::Helm::Chart.new
+  chart.dependencies.should == []
+end
+
+it "initializes_with_path" do
+  chart = Kube::Helm::Chart.new({ "name" => "x" }, path: "/tmp/charts/x")
+  chart.path.should == "/tmp/charts/x"
+end
+
+it "initializes_with_cluster" do
+  cluster = Kube::Cluster.connect(kubeconfig: "/tmp/test-kubeconfig")
+  chart = Kube::Helm::Chart.new({ "name" => "x" }, cluster: cluster)
+  chart.cluster.should == cluster
+end
+
+# ── Chart.open ───────────────────────────────────────────────────────
+
+it "open_reads_chart_yaml" do
+  Dir.mktmpdir do |dir|
+    File.write(File.join(dir, "Chart.yaml"), {
+      "name" => "test-chart",
+      "version" => "0.1.0",
+      "appVersion" => "1.0.0",
+      "description" => "A test chart",
+      "type" => "application",
+    }.to_yaml)
+
+    chart = Kube::Helm::Chart.open(dir)
+    chart.name.should == "test-chart"
   end
+end
 
-  it "initializes_with_block" do
-    chart = Kube::Helm::Chart.new {
-      self.name = "my-app"
-      self.version = "1.0.0"
-      self.appVersion = "2.5.0"
-      self.description = "A test chart"
-    }
-
-    chart.description.should == "A test chart"
+it "open_raises_without_chart_yaml" do
+  Dir.mktmpdir do |dir|
+    lambda { Kube::Helm::Chart.open(dir) }.should.raise Kube::Error
   end
+end
 
-  it "initializes_empty" do
-    chart = Kube::Helm::Chart.new
-    chart.dependencies.should == []
-  end
-
-  it "initializes_with_path" do
-    chart = Kube::Helm::Chart.new({ "name" => "x" }, path: "/tmp/charts/x")
-    chart.path.should == "/tmp/charts/x"
-  end
-
-  it "initializes_with_cluster" do
+it "open_with_cluster" do
+  Dir.mktmpdir do |dir|
+    File.write(File.join(dir, "Chart.yaml"), { "name" => "x", "version" => "1.0.0" }.to_yaml)
     cluster = Kube::Cluster.connect(kubeconfig: "/tmp/test-kubeconfig")
-    chart = Kube::Helm::Chart.new({ "name" => "x" }, cluster: cluster)
+
+    chart = Kube::Helm::Chart.open(dir, cluster: cluster)
     chart.cluster.should == cluster
   end
+end
 
-  # ── Chart.open ───────────────────────────────────────────────────────
+# ── to_s ──────────────────────────────────────────────────────────────
 
-  it "open_reads_chart_yaml" do
-    Dir.mktmpdir do |dir|
-      File.write(File.join(dir, "Chart.yaml"), {
-        "name" => "test-chart",
-        "version" => "0.1.0",
-        "appVersion" => "1.0.0",
-        "description" => "A test chart",
-        "type" => "application",
-      }.to_yaml)
+it "to_s_with_version" do
+  chart = Kube::Helm::Chart.new({ "name" => "nginx", "version" => "18.1.0" })
+  chart.to_s.should == "nginx:18.1.0"
+end
 
-      chart = Kube::Helm::Chart.open(dir)
-      chart.name.should == "test-chart"
-    end
-  end
+it "to_s_without_version" do
+  chart = Kube::Helm::Chart.new({ "name" => "nginx" })
+  chart.to_s.should == "nginx"
+end
 
-  it "open_raises_without_chart_yaml" do
-    Dir.mktmpdir do |dir|
-      lambda { Kube::Helm::Chart.open(dir) }.should.raise Kube::Error
-    end
-  end
+# ── apply_values ─────────────────────────────────────────────────────
 
-  it "open_with_cluster" do
-    Dir.mktmpdir do |dir|
-      File.write(File.join(dir, "Chart.yaml"), { "name" => "x", "version" => "1.0.0" }.to_yaml)
-      cluster = Kube::Cluster.connect(kubeconfig: "/tmp/test-kubeconfig")
+it "apply_values_raises_without_source" do
+  chart = Kube::Helm::Chart.new({ "name" => "my-app" })
+  lambda { chart.apply_values({ "replicaCount" => 3 }) }.should.raise Kube::Error
+end
 
-      chart = Kube::Helm::Chart.open(dir, cluster: cluster)
-      chart.cluster.should == cluster
-    end
-  end
-
-  # ── to_s ──────────────────────────────────────────────────────────────
-
-  it "to_s_with_version" do
-    chart = Kube::Helm::Chart.new({ "name" => "nginx", "version" => "18.1.0" })
-    chart.to_s.should == "nginx:18.1.0"
-  end
-
-  it "to_s_without_version" do
-    chart = Kube::Helm::Chart.new({ "name" => "nginx" })
-    chart.to_s.should == "nginx"
-  end
-
-  # ── apply_values ─────────────────────────────────────────────────────
-
-  it "apply_values_raises_without_source" do
-    chart = Kube::Helm::Chart.new({ "name" => "my-app" })
-    lambda { chart.apply_values({ "replicaCount" => 3 }) }.should.raise Kube::Error
-  end
-
-  it "apply_values_builds_correct_command" do
-    Dir.mktmpdir do |dir|
-      File.write(File.join(dir, "Chart.yaml"), { "name" => "my-app", "version" => "1.0.0" }.to_yaml)
-      chart = Kube::Helm::Chart.open(dir)
-
-      captured_cmd = nil
-      stub_yaml = { "kind" => "Deployment", "apiVersion" => "apps/v1", "metadata" => { "name" => "web" } }.to_yaml
-
-      original = Kube::Helm.method(:run)
-      Kube::Helm.define_singleton_method(:run) { |cmd| captured_cmd = cmd; stub_yaml }
-      begin
-        chart.apply_values({ "replicaCount" => 3 })
-      ensure
-        Kube::Helm.define_singleton_method(:run, original)
-      end
-
-      captured_cmd.should.include dir
-    end
-  end
-
-  it "apply_values_with_custom_release" do
-    Dir.mktmpdir do |dir|
-      File.write(File.join(dir, "Chart.yaml"), { "name" => "my-app", "version" => "1.0.0" }.to_yaml)
-      chart = Kube::Helm::Chart.open(dir)
-
-      captured_cmd = nil
-      stub_yaml = { "kind" => "Pod", "apiVersion" => "v1" }.to_yaml
-
-      original = Kube::Helm.method(:run)
-      Kube::Helm.define_singleton_method(:run) { |cmd| captured_cmd = cmd; stub_yaml }
-      begin
-        chart.apply_values({}, release: "custom-release")
-      ensure
-        Kube::Helm.define_singleton_method(:run, original)
-      end
-
-      captured_cmd.should.include "custom-release"
-    end
-  end
-
-  it "apply_values_with_namespace" do
-    Dir.mktmpdir do |dir|
-      File.write(File.join(dir, "Chart.yaml"), { "name" => "my-app", "version" => "1.0.0" }.to_yaml)
-      chart = Kube::Helm::Chart.open(dir)
-
-      captured_cmd = nil
-      stub_yaml = { "kind" => "Pod", "apiVersion" => "v1" }.to_yaml
-
-      original = Kube::Helm.method(:run)
-      Kube::Helm.define_singleton_method(:run) { |cmd| captured_cmd = cmd; stub_yaml }
-      begin
-        chart.apply_values({}, namespace: "production")
-      ensure
-        Kube::Helm.define_singleton_method(:run, original)
-      end
-
-      captured_cmd.should.include "--namespace=production"
-    end
-  end
-
-  it "apply_values_returns_manifest" do
-    Dir.mktmpdir do |dir|
-      File.write(File.join(dir, "Chart.yaml"), { "name" => "my-app", "version" => "1.0.0" }.to_yaml)
-      chart = Kube::Helm::Chart.open(dir)
-
-      stub_yaml = [
-        { "kind" => "Deployment", "apiVersion" => "apps/v1", "metadata" => { "name" => "web" } },
-        { "kind" => "Service", "apiVersion" => "v1", "metadata" => { "name" => "web" } },
-      ].map(&:to_yaml).join("")
-
-      original = Kube::Helm.method(:run)
-      Kube::Helm.define_singleton_method(:run) { |_cmd| stub_yaml }
-      begin
-        result = chart.apply_values({ "replicaCount" => 3 })
-      ensure
-        Kube::Helm.define_singleton_method(:run, original)
-      end
-
-      result.should.be.instance_of Kube::Schema::Manifest
-    end
-  end
-
-  it "apply_values_defaults_release_to_chart_name" do
-    Dir.mktmpdir do |dir|
-      File.write(File.join(dir, "Chart.yaml"), { "name" => "nginx", "version" => "1.0.0" }.to_yaml)
-      chart = Kube::Helm::Chart.open(dir)
-
-      captured_cmd = nil
-      stub_yaml = { "kind" => "Pod", "apiVersion" => "v1" }.to_yaml
-
-      original = Kube::Helm.method(:run)
-      Kube::Helm.define_singleton_method(:run) { |cmd| captured_cmd = cmd; stub_yaml }
-      begin
-        chart.apply_values({})
-      ensure
-        Kube::Helm.define_singleton_method(:run, original)
-      end
-
-      captured_cmd.should.include "nginx"
-    end
-  end
-
-  it "apply_values_stringifies_symbol_keys_in_values_file" do
-    Dir.mktmpdir do |dir|
-      File.write(File.join(dir, "Chart.yaml"), { "name" => "my-app", "version" => "1.0.0" }.to_yaml)
-      chart = Kube::Helm::Chart.open(dir)
-
-      tmpfile = chart.send(:write_values_tempfile, { k8sDistribution: "k3s", nested: { setup: [] } })
-      contents = File.read(tmpfile.path)
-      contents.should.include "k8sDistribution"
-      contents.should.not.include ":k8sDistribution"
-      contents.should.include "nested"
-      contents.should.not.include ":nested"
-    end
-  end
-
-  # ── show_values ──────────────────────────────────────────────────────
-
-  it "show_values" do
-    Dir.mktmpdir do |dir|
-      File.write(File.join(dir, "Chart.yaml"), { "name" => "my-app", "version" => "1.0.0" }.to_yaml)
-      chart = Kube::Helm::Chart.open(dir)
-
-      captured_cmd = nil
-      stub_yaml = { "replicaCount" => 1, "service" => { "type" => "ClusterIP" } }.to_yaml
-
-      original = Kube::Helm.method(:run)
-      Kube::Helm.define_singleton_method(:run) { |cmd| captured_cmd = cmd; stub_yaml }
-      begin
-        result = chart.show_values
-        result["replicaCount"].should == 1
-      ensure
-        Kube::Helm.define_singleton_method(:run, original)
-      end
-    end
-  end
-
-  it "show_values_raises_without_source" do
-    chart = Kube::Helm::Chart.new({ "name" => "my-app" })
-    lambda { chart.show_values }.should.raise Kube::Error
-  end
-
-  # ── crds ─────────────────────────────────────────────────────────────
-
-  it "crds_returns_custom_resource_definition_objects" do
-    Dir.mktmpdir do |dir|
-      File.write(File.join(dir, "Chart.yaml"), { "name" => "cert-manager", "version" => "1.0.0" }.to_yaml)
-      chart = Kube::Helm::Chart.open(dir)
-
-      stub_yaml = [
-        { "kind" => "Deployment", "apiVersion" => "apps/v1", "metadata" => { "name" => "cm" } },
-        {
-          "kind" => "CustomResourceDefinition",
-          "apiVersion" => "apiextensions.k8s.io/v1",
-          "metadata" => { "name" => "clusterissuers.cert-manager.io" },
-          "spec" => {
-            "group" => "cert-manager.io",
-            "names" => { "kind" => "ClusterIssuer" },
-            "versions" => [
-              {
-                "name" => "v1",
-                "schema" => {
-                  "openAPIV3Schema" => {
-                    "type" => "object",
-                    "properties" => { "spec" => { "type" => "object" } },
-                  },
-                },
-              },
-            ],
-          },
-        },
-      ].map(&:to_yaml).join("")
-
-      original = Kube::Helm.method(:run)
-      Kube::Helm.define_singleton_method(:run) { |_cmd| stub_yaml }
-      begin
-        result = chart.crds
-      ensure
-        Kube::Helm.define_singleton_method(:run, original)
-      end
-
-      result.length.should == 1
-    end
-  end
-
-  it "crds_raises_without_source" do
-    chart = Kube::Helm::Chart.new({ "name" => "my-app" })
-    lambda { chart.crds }.should.raise Kube::Error
-  end
-
-  # ── cluster scoping ──────────────────────────────────────────────────
-
-  it "apply_values_uses_cluster_helm_instance" do
-    Dir.mktmpdir do |dir|
-      File.write(File.join(dir, "Chart.yaml"), { "name" => "my-app", "version" => "1.0.0" }.to_yaml)
-      cluster = Kube::Cluster.connect(kubeconfig: "/tmp/test-kubeconfig")
-      chart = Kube::Helm::Chart.open(dir, cluster: cluster)
-
-      captured_cmd = nil
-      stub_yaml = { "kind" => "Pod", "apiVersion" => "v1" }.to_yaml
-
-      helm = cluster.connection.helm
-      original = helm.method(:run)
-      helm.define_singleton_method(:run) { |cmd| captured_cmd = cmd; stub_yaml }
-      begin
-        chart.apply_values({ "foo" => "bar" })
-      ensure
-        helm.define_singleton_method(:run, original)
-      end
-
-      captured_cmd.should.include "template"
-    end
-  end
-
-  it "show_values_uses_cluster_helm_instance" do
-    Dir.mktmpdir do |dir|
-      File.write(File.join(dir, "Chart.yaml"), { "name" => "my-app", "version" => "1.0.0" }.to_yaml)
-      cluster = Kube::Cluster.connect(kubeconfig: "/tmp/test-kubeconfig")
-      chart = Kube::Helm::Chart.open(dir, cluster: cluster)
-
-      captured_cmd = nil
-      stub_yaml = { "replicaCount" => 1 }.to_yaml
-
-      helm = cluster.connection.helm
-      original = helm.method(:run)
-      helm.define_singleton_method(:run) { |cmd| captured_cmd = cmd; stub_yaml }
-      begin
-        chart.show_values
-      ensure
-        helm.define_singleton_method(:run, original)
-      end
-
-      captured_cmd.should.include "show"
-    end
-  end
-
-  # ── remote chart (ref-based) ─────────────────────────────────────────
-
-  it "initializes_with_ref" do
-    chart = Kube::Helm::Chart.new({ "name" => "nginx", "version" => "18.1.0" }, ref: "bitnami/nginx")
-    chart.ref.should == "bitnami/nginx"
-  end
-
-  it "apply_values_with_ref_uses_ref_and_version" do
-    chart = Kube::Helm::Chart.new(
-      { "name" => "nginx", "version" => "18.1.0" },
-      ref: "bitnami/nginx"
-    )
+it "apply_values_builds_correct_command" do
+  Dir.mktmpdir do |dir|
+    File.write(File.join(dir, "Chart.yaml"), { "name" => "my-app", "version" => "1.0.0" }.to_yaml)
+    chart = Kube::Helm::Chart.open(dir)
 
     captured_cmd = nil
     stub_yaml = { "kind" => "Deployment", "apiVersion" => "apps/v1", "metadata" => { "name" => "web" } }.to_yaml
@@ -564,78 +321,321 @@ test do
       Kube::Helm.define_singleton_method(:run, original)
     end
 
-    captured_cmd.should.include "--version=18.1.0"
+    captured_cmd.should.include dir
   end
+end
 
-  it "apply_values_with_path_does_not_add_version_flag" do
-    Dir.mktmpdir do |dir|
-      File.write(File.join(dir, "Chart.yaml"), { "name" => "my-app", "version" => "1.0.0" }.to_yaml)
-      chart = Kube::Helm::Chart.open(dir)
-
-      captured_cmd = nil
-      stub_yaml = { "kind" => "Pod", "apiVersion" => "v1" }.to_yaml
-
-      original = Kube::Helm.method(:run)
-      Kube::Helm.define_singleton_method(:run) { |cmd| captured_cmd = cmd; stub_yaml }
-      begin
-        chart.apply_values({})
-      ensure
-        Kube::Helm.define_singleton_method(:run, original)
-      end
-
-      captured_cmd.should.not.include "--version"
-    end
-  end
-
-  it "show_values_with_ref" do
-    chart = Kube::Helm::Chart.new(
-      { "name" => "nginx", "version" => "18.1.0" },
-      ref: "bitnami/nginx"
-    )
+it "apply_values_with_custom_release" do
+  Dir.mktmpdir do |dir|
+    File.write(File.join(dir, "Chart.yaml"), { "name" => "my-app", "version" => "1.0.0" }.to_yaml)
+    chart = Kube::Helm::Chart.open(dir)
 
     captured_cmd = nil
-    stub_yaml = { "replicaCount" => 1 }.to_yaml
+    stub_yaml = { "kind" => "Pod", "apiVersion" => "v1" }.to_yaml
 
     original = Kube::Helm.method(:run)
     Kube::Helm.define_singleton_method(:run) { |cmd| captured_cmd = cmd; stub_yaml }
     begin
-      chart.show_values
+      chart.apply_values({}, release: "custom-release")
     ensure
       Kube::Helm.define_singleton_method(:run, original)
     end
 
-    captured_cmd.should.include "--version=18.1.0"
+    captured_cmd.should.include "custom-release"
   end
+end
 
-  it "crds_with_ref" do
-    chart = Kube::Helm::Chart.new(
-      { "name" => "cert-manager", "version" => "1.17.2" },
-      ref: "jetstack/cert-manager"
-    )
+it "apply_values_with_namespace" do
+  Dir.mktmpdir do |dir|
+    File.write(File.join(dir, "Chart.yaml"), { "name" => "my-app", "version" => "1.0.0" }.to_yaml)
+    chart = Kube::Helm::Chart.open(dir)
+
+    captured_cmd = nil
+    stub_yaml = { "kind" => "Pod", "apiVersion" => "v1" }.to_yaml
+
+    original = Kube::Helm.method(:run)
+    Kube::Helm.define_singleton_method(:run) { |cmd| captured_cmd = cmd; stub_yaml }
+    begin
+      chart.apply_values({}, namespace: "production")
+    ensure
+      Kube::Helm.define_singleton_method(:run, original)
+    end
+
+    captured_cmd.should.include "--namespace=production"
+  end
+end
+
+it "apply_values_returns_manifest" do
+  Dir.mktmpdir do |dir|
+    File.write(File.join(dir, "Chart.yaml"), { "name" => "my-app", "version" => "1.0.0" }.to_yaml)
+    chart = Kube::Helm::Chart.open(dir)
 
     stub_yaml = [
+      { "kind" => "Deployment", "apiVersion" => "apps/v1", "metadata" => { "name" => "web" } },
+      { "kind" => "Service", "apiVersion" => "v1", "metadata" => { "name" => "web" } },
+    ].map(&:to_yaml).join("")
+
+    original = Kube::Helm.method(:run)
+    Kube::Helm.define_singleton_method(:run) { |_cmd| stub_yaml }
+    begin
+      result = chart.apply_values({ "replicaCount" => 3 })
+    ensure
+      Kube::Helm.define_singleton_method(:run, original)
+    end
+
+    result.should.be.instance_of Kube::Schema::Manifest
+  end
+end
+
+it "apply_values_defaults_release_to_chart_name" do
+  Dir.mktmpdir do |dir|
+    File.write(File.join(dir, "Chart.yaml"), { "name" => "nginx", "version" => "1.0.0" }.to_yaml)
+    chart = Kube::Helm::Chart.open(dir)
+
+    captured_cmd = nil
+    stub_yaml = { "kind" => "Pod", "apiVersion" => "v1" }.to_yaml
+
+    original = Kube::Helm.method(:run)
+    Kube::Helm.define_singleton_method(:run) { |cmd| captured_cmd = cmd; stub_yaml }
+    begin
+      chart.apply_values({})
+    ensure
+      Kube::Helm.define_singleton_method(:run, original)
+    end
+
+    captured_cmd.should.include "nginx"
+  end
+end
+
+it "apply_values_stringifies_symbol_keys_in_values_file" do
+  Dir.mktmpdir do |dir|
+    File.write(File.join(dir, "Chart.yaml"), { "name" => "my-app", "version" => "1.0.0" }.to_yaml)
+    chart = Kube::Helm::Chart.open(dir)
+
+    tmpfile = chart.send(:write_values_tempfile, { k8sDistribution: "k3s", nested: { setup: [] } })
+    contents = File.read(tmpfile.path)
+    contents.should.include "k8sDistribution"
+    contents.should.not.include ":k8sDistribution"
+    contents.should.include "nested"
+    contents.should.not.include ":nested"
+  end
+end
+
+# ── show_values ──────────────────────────────────────────────────────
+
+it "show_values" do
+  Dir.mktmpdir do |dir|
+    File.write(File.join(dir, "Chart.yaml"), { "name" => "my-app", "version" => "1.0.0" }.to_yaml)
+    chart = Kube::Helm::Chart.open(dir)
+
+    captured_cmd = nil
+    stub_yaml = { "replicaCount" => 1, "service" => { "type" => "ClusterIP" } }.to_yaml
+
+    original = Kube::Helm.method(:run)
+    Kube::Helm.define_singleton_method(:run) { |cmd| captured_cmd = cmd; stub_yaml }
+    begin
+      result = chart.show_values
+      result["replicaCount"].should == 1
+    ensure
+      Kube::Helm.define_singleton_method(:run, original)
+    end
+  end
+end
+
+it "show_values_raises_without_source" do
+  chart = Kube::Helm::Chart.new({ "name" => "my-app" })
+  lambda { chart.show_values }.should.raise Kube::Error
+end
+
+# ── crds ─────────────────────────────────────────────────────────────
+
+it "crds_returns_custom_resource_definition_objects" do
+  Dir.mktmpdir do |dir|
+    File.write(File.join(dir, "Chart.yaml"), { "name" => "cert-manager", "version" => "1.0.0" }.to_yaml)
+    chart = Kube::Helm::Chart.open(dir)
+
+    stub_yaml = [
+      { "kind" => "Deployment", "apiVersion" => "apps/v1", "metadata" => { "name" => "cm" } },
       {
         "kind" => "CustomResourceDefinition",
         "apiVersion" => "apiextensions.k8s.io/v1",
-        "metadata" => { "name" => "issuers.cert-manager.io" },
+        "metadata" => { "name" => "clusterissuers.cert-manager.io" },
         "spec" => {
           "group" => "cert-manager.io",
-          "names" => { "kind" => "Issuer" },
+          "names" => { "kind" => "ClusterIssuer" },
           "versions" => [
-            { "name" => "v1", "schema" => { "openAPIV3Schema" => { "type" => "object" } } },
+            {
+              "name" => "v1",
+              "schema" => {
+                "openAPIV3Schema" => {
+                  "type" => "object",
+                  "properties" => { "spec" => { "type" => "object" } },
+                },
+              },
+            },
           ],
         },
       },
     ].map(&:to_yaml).join("")
 
-    captured_cmd = nil
     original = Kube::Helm.method(:run)
-    Kube::Helm.define_singleton_method(:run) { |cmd| captured_cmd = cmd; stub_yaml }
+    Kube::Helm.define_singleton_method(:run) { |_cmd| stub_yaml }
     begin
       result = chart.crds
-      result.length.should == 1
     ensure
       Kube::Helm.define_singleton_method(:run, original)
     end
+
+    result.length.should == 1
+  end
+end
+
+it "crds_raises_without_source" do
+  chart = Kube::Helm::Chart.new({ "name" => "my-app" })
+  lambda { chart.crds }.should.raise Kube::Error
+end
+
+# ── cluster scoping ──────────────────────────────────────────────────
+
+it "apply_values_uses_cluster_helm_instance" do
+  Dir.mktmpdir do |dir|
+    File.write(File.join(dir, "Chart.yaml"), { "name" => "my-app", "version" => "1.0.0" }.to_yaml)
+    cluster = Kube::Cluster.connect(kubeconfig: "/tmp/test-kubeconfig")
+    chart = Kube::Helm::Chart.open(dir, cluster: cluster)
+
+    captured_cmd = nil
+    stub_yaml = { "kind" => "Pod", "apiVersion" => "v1" }.to_yaml
+
+    helm = cluster.connection.helm
+    original = helm.method(:run)
+    helm.define_singleton_method(:run) { |cmd| captured_cmd = cmd; stub_yaml }
+    begin
+      chart.apply_values({ "foo" => "bar" })
+    ensure
+      helm.define_singleton_method(:run, original)
+    end
+
+    captured_cmd.should.include "template"
+  end
+end
+
+it "show_values_uses_cluster_helm_instance" do
+  Dir.mktmpdir do |dir|
+    File.write(File.join(dir, "Chart.yaml"), { "name" => "my-app", "version" => "1.0.0" }.to_yaml)
+    cluster = Kube::Cluster.connect(kubeconfig: "/tmp/test-kubeconfig")
+    chart = Kube::Helm::Chart.open(dir, cluster: cluster)
+
+    captured_cmd = nil
+    stub_yaml = { "replicaCount" => 1 }.to_yaml
+
+    helm = cluster.connection.helm
+    original = helm.method(:run)
+    helm.define_singleton_method(:run) { |cmd| captured_cmd = cmd; stub_yaml }
+    begin
+      chart.show_values
+    ensure
+      helm.define_singleton_method(:run, original)
+    end
+
+    captured_cmd.should.include "show"
+  end
+end
+
+# ── remote chart (ref-based) ─────────────────────────────────────────
+
+it "initializes_with_ref" do
+  chart = Kube::Helm::Chart.new({ "name" => "nginx", "version" => "18.1.0" }, ref: "bitnami/nginx")
+  chart.ref.should == "bitnami/nginx"
+end
+
+it "apply_values_with_ref_uses_ref_and_version" do
+  chart = Kube::Helm::Chart.new(
+    { "name" => "nginx", "version" => "18.1.0" },
+    ref: "bitnami/nginx"
+  )
+
+  captured_cmd = nil
+  stub_yaml = { "kind" => "Deployment", "apiVersion" => "apps/v1", "metadata" => { "name" => "web" } }.to_yaml
+
+  original = Kube::Helm.method(:run)
+  Kube::Helm.define_singleton_method(:run) { |cmd| captured_cmd = cmd; stub_yaml }
+  begin
+    chart.apply_values({ "replicaCount" => 3 })
+  ensure
+    Kube::Helm.define_singleton_method(:run, original)
+  end
+
+  captured_cmd.should.include "--version=18.1.0"
+end
+
+it "apply_values_with_path_does_not_add_version_flag" do
+  Dir.mktmpdir do |dir|
+    File.write(File.join(dir, "Chart.yaml"), { "name" => "my-app", "version" => "1.0.0" }.to_yaml)
+    chart = Kube::Helm::Chart.open(dir)
+
+    captured_cmd = nil
+    stub_yaml = { "kind" => "Pod", "apiVersion" => "v1" }.to_yaml
+
+    original = Kube::Helm.method(:run)
+    Kube::Helm.define_singleton_method(:run) { |cmd| captured_cmd = cmd; stub_yaml }
+    begin
+      chart.apply_values({})
+    ensure
+      Kube::Helm.define_singleton_method(:run, original)
+    end
+
+    captured_cmd.should.not.include "--version"
+  end
+end
+
+it "show_values_with_ref" do
+  chart = Kube::Helm::Chart.new(
+    { "name" => "nginx", "version" => "18.1.0" },
+    ref: "bitnami/nginx"
+  )
+
+  captured_cmd = nil
+  stub_yaml = { "replicaCount" => 1 }.to_yaml
+
+  original = Kube::Helm.method(:run)
+  Kube::Helm.define_singleton_method(:run) { |cmd| captured_cmd = cmd; stub_yaml }
+  begin
+    chart.show_values
+  ensure
+    Kube::Helm.define_singleton_method(:run, original)
+  end
+
+  captured_cmd.should.include "--version=18.1.0"
+end
+
+it "crds_with_ref" do
+  chart = Kube::Helm::Chart.new(
+    { "name" => "cert-manager", "version" => "1.17.2" },
+    ref: "jetstack/cert-manager"
+  )
+
+  stub_yaml = [
+    {
+      "kind" => "CustomResourceDefinition",
+      "apiVersion" => "apiextensions.k8s.io/v1",
+      "metadata" => { "name" => "issuers.cert-manager.io" },
+      "spec" => {
+        "group" => "cert-manager.io",
+        "names" => { "kind" => "Issuer" },
+        "versions" => [
+          { "name" => "v1", "schema" => { "openAPIV3Schema" => { "type" => "object" } } },
+        ],
+      },
+    },
+  ].map(&:to_yaml).join("")
+
+  captured_cmd = nil
+  original = Kube::Helm.method(:run)
+  Kube::Helm.define_singleton_method(:run) { |cmd| captured_cmd = cmd; stub_yaml }
+  begin
+    result = chart.crds
+    result.length.should == 1
+  ensure
+    Kube::Helm.define_singleton_method(:run, original)
   end
 end

@@ -49,16 +49,16 @@ module Kube
   end
 end
 
-test do
-  describe "Forgejo::Helm" do
-    it "initializes without error" do
-      Kube::Cluster::Standard::Forgejo::Helm
-        .new(
-          domain: "git.facebook.com"
-        )
-        .to_yaml
-        .is_a?(String)
-        .should == true
-    end
+__END__
+
+describe "Forgejo::Helm" do
+  it "initializes without error" do
+    Kube::Cluster::Standard::Forgejo::Helm
+      .new(
+        domain: "git.facebook.com"
+      )
+      .to_yaml
+      .is_a?(String)
+      .should == true
   end
 end

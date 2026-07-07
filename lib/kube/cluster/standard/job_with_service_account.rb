@@ -51,17 +51,17 @@ module Kube
   end
 end
 
-test do
-  describe "JobWithServiceAccount" do
-    it "emits the RBAC trio plus the job" do
-      m = Kube::Cluster::Standard::JobWithServiceAccount.new(
-        name: "seed",
-        image: "nixery.dev/shell/kubectl",
-        rules: ["batch/jobs" => %w[create]],
-        command: ["true"],
-      )
+__END__
 
-      m.map { |r| r.to_h[:kind] }.sort.should == %w[Job Role RoleBinding ServiceAccount]
-    end
+describe "JobWithServiceAccount" do
+  it "emits the RBAC trio plus the job" do
+    m = Kube::Cluster::Standard::JobWithServiceAccount.new(
+      name: "seed",
+      image: "nixery.dev/shell/kubectl",
+      rules: ["batch/jobs" => %w[create]],
+      command: ["true"],
+    )
+
+    m.map { |r| r.to_h[:kind] }.sort.should == %w[Job Role RoleBinding ServiceAccount]
   end
 end

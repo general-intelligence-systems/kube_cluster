@@ -64,34 +64,34 @@ module Kube
   end
 end
 
-test do
-  describe "Operator" do
-    it "initializes without error" do
-      Kube::Cluster::Standard::CloudNativePg::Helm::Operator
-        .new()
-        .to_yaml
-        .is_a?(String)
-        .should == true
-    end
+__END__
+
+describe "Operator" do
+  it "initializes without error" do
+    Kube::Cluster::Standard::CloudNativePg::Helm::Operator
+      .new()
+      .to_yaml
+      .is_a?(String)
+      .should == true
   end
+end
 
-  #describe "Cluster" do
-  #  it "initializes without error" do
-  #    Kube::Cluster::Standard::CloudNativePg::Helm::Cluster
-  #      .new()
-  #      .to_yaml
-  #      .is_a?(String)
-  #      .should == true
-  #  end
-  #end
+#describe "Cluster" do
+#  it "initializes without error" do
+#    Kube::Cluster::Standard::CloudNativePg::Helm::Cluster
+#      .new()
+#      .to_yaml
+#      .is_a?(String)
+#      .should == true
+#  end
+#end
 
-  describe "Barman" do
-    it "initializes without error" do
-      Kube::Cluster::Standard::CloudNativePg::Helm::Barman
-        .new()
-        .to_yaml
-        .is_a?(String)
-        .should == true
-    end
+describe "Barman" do
+  it "initializes without error" do
+    Kube::Cluster::Standard::CloudNativePg::Helm::Barman
+      .new()
+      .to_yaml
+      .is_a?(String)
+      .should == true
   end
 end

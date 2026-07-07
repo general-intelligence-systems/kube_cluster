@@ -25,14 +25,14 @@ module Kube
   end
 end
 
-test do
-  describe "VictoriaMetrics::VMAgent" do
-    it "initializes without error" do
-      Kube::Cluster::Standard::VictoriaMetrics::VMAgent
-        .new(name: "vmagent", remote_write_url: "http://vmsingle-vmsingle.metrics.svc:8429/api/v1/write")
-        .to_yaml
-        .is_a?(String)
-        .should == true
-    end
+__END__
+
+describe "VictoriaMetrics::VMAgent" do
+  it "initializes without error" do
+    Kube::Cluster::Standard::VictoriaMetrics::VMAgent
+      .new(name: "vmagent", remote_write_url: "http://vmsingle-vmsingle.metrics.svc:8429/api/v1/write")
+      .to_yaml
+      .is_a?(String)
+      .should == true
   end
 end

@@ -22,14 +22,14 @@ module Kube
   end
 end
 
-test do
-  describe "VictoriaMetrics::VMSingle" do
-    it "initializes without error" do
-      Kube::Cluster::Standard::VictoriaMetrics::VMSingle
-        .new(name: "vmsingle")
-        .to_yaml
-        .is_a?(String)
-        .should == true
-    end
+__END__
+
+describe "VictoriaMetrics::VMSingle" do
+  it "initializes without error" do
+    Kube::Cluster::Standard::VictoriaMetrics::VMSingle
+      .new(name: "vmsingle")
+      .to_yaml
+      .is_a?(String)
+      .should == true
   end
 end

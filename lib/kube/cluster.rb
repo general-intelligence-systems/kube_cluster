@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "bundler/setup"
-require "scampi"
 require "kube/schema"
 require "active_support/core_ext/string/inflections"
 

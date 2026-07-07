@@ -58,18 +58,18 @@ module Kube
   end
 end
 
-test do
-  describe "MetaController::DecoratorController" do
-    it "initializes without error" do
-      Kube::Cluster::Standard::MetaController::DecoratorController
-        .new(
-          name: "my-controller",
-          webhook_url: "http://hook.default.svc/sync",
-          resources: { { apiVersion: "v1", resource: "pods" } => {} },
-        )
-        .to_yaml
-        .is_a?(String)
-        .should == true
-    end
+__END__
+
+describe "MetaController::DecoratorController" do
+  it "initializes without error" do
+    Kube::Cluster::Standard::MetaController::DecoratorController
+      .new(
+        name: "my-controller",
+        webhook_url: "http://hook.default.svc/sync",
+        resources: { { apiVersion: "v1", resource: "pods" } => {} },
+      )
+      .to_yaml
+      .is_a?(String)
+      .should == true
   end
 end

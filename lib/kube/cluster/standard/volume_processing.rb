@@ -103,6 +103,6 @@ module Kube
   end
 end
 
-test do
-  # no op
-end
+__END__
+
+# no op

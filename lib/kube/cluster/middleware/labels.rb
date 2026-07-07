@@ -61,82 +61,82 @@ module Kube
   end
 end
 
-test do
-  Middleware = Kube::Cluster::Middleware
+__END__
 
-  it "adds_standard_labels" do
-    m = manifest(Kube::Cluster["ConfigMap"].new { metadata.name = "test" })
+Middleware = Kube::Cluster::Middleware
 
-    Middleware::Labels.new(app: "web", managed_by: "kube_cluster").call(m)
-    labels = m.resources.first.to_h.dig(:metadata, :labels)
+it "adds_standard_labels" do
+  m = manifest(Kube::Cluster["ConfigMap"].new { metadata.name = "test" })
 
-    labels[:"app.kubernetes.io/name"].should == "web"
-  end
+  Middleware::Labels.new(app: "web", managed_by: "kube_cluster").call(m)
+  labels = m.resources.first.to_h.dig(:metadata, :labels)
 
-  it "maps_all_standard_keys" do
-    m = manifest(Kube::Cluster["ConfigMap"].new { metadata.name = "test" })
-
-    Middleware::Labels.new(
-      app: "web",
-      instance: "my-release",
-      version: "1.0.0",
-      component: "frontend",
-      part_of: "platform",
-      managed_by: "kube_cluster",
-    ).call(m)
-
-    labels = m.resources.first.to_h.dig(:metadata, :labels)
-
-    labels[:"app.kubernetes.io/managed-by"].should == "kube_cluster"
-  end
-
-  it "resource_labels_override_middleware_defaults" do
-    m = manifest(Kube::Cluster["ConfigMap"].new {
-      metadata.name = "test"
-      metadata.labels = { "app.kubernetes.io/name": "override" }
-    })
-
-    Middleware::Labels.new(app: "default").call(m)
-    labels = m.resources.first.to_h.dig(:metadata, :labels)
-
-    labels[:"app.kubernetes.io/name"].should == "override"
-  end
-
-  it "preserves_existing_labels" do
-    m = manifest(Kube::Cluster["ConfigMap"].new {
-      metadata.name = "test"
-      metadata.labels = { custom: "value" }
-    })
-
-    Middleware::Labels.new(app: "web").call(m)
-    labels = m.resources.first.to_h.dig(:metadata, :labels)
-
-    labels[:custom].should == "value"
-  end
-
-  it "passes_through_non_standard_keys" do
-    m = manifest(Kube::Cluster["ConfigMap"].new { metadata.name = "test" })
-
-    Middleware::Labels.new(:"team.io/name" => "platform").call(m)
-    labels = m.resources.first.to_h.dig(:metadata, :labels)
-
-    labels[:"team.io/name"].should == "platform"
-  end
-
-  it "converts_values_to_strings" do
-    m = manifest(Kube::Cluster["ConfigMap"].new { metadata.name = "test" })
-
-    Middleware::Labels.new(version: 2).call(m)
-    labels = m.resources.first.to_h.dig(:metadata, :labels)
-
-    labels[:"app.kubernetes.io/version"].should == "2"
-  end
-
-  private
-
-    def manifest(*resources)
-      m = Kube::Cluster::Manifest.new
-      resources.each { |r| m << r }
-      m
-    end
+  labels[:"app.kubernetes.io/name"].should == "web"
 end
+
+it "maps_all_standard_keys" do
+  m = manifest(Kube::Cluster["ConfigMap"].new { metadata.name = "test" })
+
+  Middleware::Labels.new(
+    app: "web",
+    instance: "my-release",
+    version: "1.0.0",
+    component: "frontend",
+    part_of: "platform",
+    managed_by: "kube_cluster",
+  ).call(m)
+
+  labels = m.resources.first.to_h.dig(:metadata, :labels)
+
+  labels[:"app.kubernetes.io/managed-by"].should == "kube_cluster"
+end
+
+it "resource_labels_override_middleware_defaults" do
+  m = manifest(Kube::Cluster["ConfigMap"].new {
+    metadata.name = "test"
+    metadata.labels = { "app.kubernetes.io/name": "override" }
+  })
+
+  Middleware::Labels.new(app: "default").call(m)
+  labels = m.resources.first.to_h.dig(:metadata, :labels)
+
+  labels[:"app.kubernetes.io/name"].should == "override"
+end
+
+it "preserves_existing_labels" do
+  m = manifest(Kube::Cluster["ConfigMap"].new {
+    metadata.name = "test"
+    metadata.labels = { custom: "value" }
+  })
+
+  Middleware::Labels.new(app: "web").call(m)
+  labels = m.resources.first.to_h.dig(:metadata, :labels)
+
+  labels[:custom].should == "value"
+end
+
+it "passes_through_non_standard_keys" do
+  m = manifest(Kube::Cluster["ConfigMap"].new { metadata.name = "test" })
+
+  Middleware::Labels.new(:"team.io/name" => "platform").call(m)
+  labels = m.resources.first.to_h.dig(:metadata, :labels)
+
+  labels[:"team.io/name"].should == "platform"
+end
+
+it "converts_values_to_strings" do
+  m = manifest(Kube::Cluster["ConfigMap"].new { metadata.name = "test" })
+
+  Middleware::Labels.new(version: 2).call(m)
+  labels = m.resources.first.to_h.dig(:metadata, :labels)
+
+  labels[:"app.kubernetes.io/version"].should == "2"
+end
+
+private
+
+  def manifest(*resources)
+    m = Kube::Cluster::Manifest.new
+    resources.each { |r| m << r }
+    m
+  end

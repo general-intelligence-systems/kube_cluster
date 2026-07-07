@@ -54,18 +54,18 @@ module Kube
   end
 end
 
-test do
-  describe "CronJobWithServiceAccount" do
-    it "emits the RBAC trio plus the cron job" do
-      m = Kube::Cluster::Standard::CronJobWithServiceAccount.new(
-        name: "builder",
-        image: "nixery.dev/shell/kubectl",
-        schedule: "*/5 * * * *",
-        rules: ["secrets" => %w[get list]],
-        command: ["true"],
-      )
+__END__
 
-      m.map { |r| r.to_h[:kind] }.sort.should == %w[CronJob Role RoleBinding ServiceAccount]
-    end
+describe "CronJobWithServiceAccount" do
+  it "emits the RBAC trio plus the cron job" do
+    m = Kube::Cluster::Standard::CronJobWithServiceAccount.new(
+      name: "builder",
+      image: "nixery.dev/shell/kubectl",
+      schedule: "*/5 * * * *",
+      rules: ["secrets" => %w[get list]],
+      command: ["true"],
+    )
+
+    m.map { |r| r.to_h[:kind] }.sort.should == %w[CronJob Role RoleBinding ServiceAccount]
   end
 end

@@ -107,159 +107,159 @@ module Kube
   end
 end
 
-test do
-  Middleware = Kube::Cluster::Middleware
+__END__
 
-  it "generates_hpa_from_deployment" do
-    m = manifest(Kube::Cluster["Deployment"].new {
-      metadata.name = "web"
-      metadata.namespace = "production"
-      metadata.labels = {
-        "app.kubernetes.io/name": "web",
-        "app.kubernetes.io/autoscale": "2-10",
-      }
-      spec.selector.matchLabels = { app: "web" }
-      spec.template.metadata.labels = { app: "web" }
-      spec.template.spec.containers = [
-        { name: "web", image: "nginx" },
-      ]
-    })
+Middleware = Kube::Cluster::Middleware
 
-    Middleware::HPAForDeployment.new.call(m)
+it "generates_hpa_from_deployment" do
+  m = manifest(Kube::Cluster["Deployment"].new {
+    metadata.name = "web"
+    metadata.namespace = "production"
+    metadata.labels = {
+      "app.kubernetes.io/name": "web",
+      "app.kubernetes.io/autoscale": "2-10",
+    }
+    spec.selector.matchLabels = { app: "web" }
+    spec.template.metadata.labels = { app: "web" }
+    spec.template.spec.containers = [
+      { name: "web", image: "nginx" },
+    ]
+  })
 
-    deploy, hpa = m.resources
-    hh = hpa.to_h
-    metrics = hh.dig(:spec, :metrics)
+  Middleware::HPAForDeployment.new.call(m)
 
-    metrics[1].dig(:resource, :target, :averageUtilization).should == 80
-  end
+  deploy, hpa = m.resources
+  hh = hpa.to_h
+  metrics = hh.dig(:spec, :metrics)
 
-  it "custom_cpu_and_memory_targets" do
-    m = manifest(Kube::Cluster["Deployment"].new {
-      metadata.name = "web"
-      metadata.labels = { "app.kubernetes.io/autoscale": "1-3" }
-      spec.selector.matchLabels = { app: "web" }
-      spec.template.metadata.labels = { app: "web" }
-      spec.template.spec.containers = [
-        { name: "web", image: "nginx" },
-      ]
-    })
-
-    Middleware::HPAForDeployment.new(cpu: 60, memory: 70).call(m)
-    hpa = m.resources.last.to_h
-
-    hpa.dig(:spec, :metrics, 1, :resource, :target, :averageUtilization).should == 70
-  end
-
-  it "strips_autoscale_label_from_hpa" do
-    m = manifest(Kube::Cluster["Deployment"].new {
-      metadata.name = "web"
-      metadata.labels = {
-        "app.kubernetes.io/name": "web",
-        "app.kubernetes.io/autoscale": "1-5",
-      }
-      spec.selector.matchLabels = { app: "web" }
-      spec.template.metadata.labels = { app: "web" }
-      spec.template.spec.containers = [
-        { name: "web", image: "nginx" },
-      ]
-    })
-
-    Middleware::HPAForDeployment.new.call(m)
-    hpa_labels = m.resources.last.to_h.dig(:metadata, :labels)
-
-    hpa_labels[:"app.kubernetes.io/autoscale"].should.be.nil
-  end
-
-  it "skips_deployment_without_autoscale_label" do
-    m = manifest(Kube::Cluster["Deployment"].new {
-      metadata.name = "web"
-      spec.selector.matchLabels = { app: "web" }
-      spec.template.metadata.labels = { app: "web" }
-      spec.template.spec.containers = [
-        { name: "web", image: "nginx" },
-      ]
-    })
-
-    Middleware::HPAForDeployment.new.call(m)
-
-    m.resources.size.should == 1
-  end
-
-  it "skips_non_pod_bearing_resources" do
-    m = manifest(Kube::Cluster["ConfigMap"].new {
-      metadata.name = "config"
-      metadata.labels = { "app.kubernetes.io/autoscale": "1-5" }
-    })
-
-    Middleware::HPAForDeployment.new.call(m)
-
-    m.resources.size.should == 1
-  end
-
-  it "raises_on_invalid_range_format" do
-    m = manifest(Kube::Cluster["Deployment"].new {
-      metadata.name = "web"
-      metadata.labels = { "app.kubernetes.io/autoscale": "bad" }
-      spec.selector.matchLabels = { app: "web" }
-      spec.template.metadata.labels = { app: "web" }
-      spec.template.spec.containers = [
-        { name: "web", image: "nginx" },
-      ]
-    })
-
-    error = nil
-    begin
-      Middleware::HPAForDeployment.new.call(m)
-    rescue ArgumentError => e
-      error = e
-    end
-
-    error.message.should.include "Invalid autoscale label"
-  end
-
-  it "raises_on_invalid_range_values" do
-    m = manifest(Kube::Cluster["Deployment"].new {
-      metadata.name = "web"
-      metadata.labels = { "app.kubernetes.io/autoscale": "5-2" }
-      spec.selector.matchLabels = { app: "web" }
-      spec.template.metadata.labels = { app: "web" }
-      spec.template.spec.containers = [
-        { name: "web", image: "nginx" },
-      ]
-    })
-
-    error = nil
-    begin
-      Middleware::HPAForDeployment.new.call(m)
-    rescue ArgumentError => e
-      error = e
-    end
-
-    error.message.should.include "Invalid autoscale range"
-  end
-
-  it "works_with_statefulset" do
-    m = manifest(Kube::Cluster["StatefulSet"].new {
-      metadata.name = "db"
-      metadata.labels = { "app.kubernetes.io/autoscale": "1-3" }
-      spec.selector.matchLabels = { app: "db" }
-      spec.template.metadata.labels = { app: "db" }
-      spec.template.spec.containers = [
-        { name: "postgres", image: "postgres:16" },
-      ]
-    })
-
-    Middleware::HPAForDeployment.new.call(m)
-
-    m.resources.last.to_h.dig(:spec, :scaleTargetRef, :kind).should == "StatefulSet"
-  end
-
-  private
-
-    def manifest(*resources)
-      m = Kube::Cluster::Manifest.new
-      resources.each { |r| m << r }
-      m
-    end
+  metrics[1].dig(:resource, :target, :averageUtilization).should == 80
 end
+
+it "custom_cpu_and_memory_targets" do
+  m = manifest(Kube::Cluster["Deployment"].new {
+    metadata.name = "web"
+    metadata.labels = { "app.kubernetes.io/autoscale": "1-3" }
+    spec.selector.matchLabels = { app: "web" }
+    spec.template.metadata.labels = { app: "web" }
+    spec.template.spec.containers = [
+      { name: "web", image: "nginx" },
+    ]
+  })
+
+  Middleware::HPAForDeployment.new(cpu: 60, memory: 70).call(m)
+  hpa = m.resources.last.to_h
+
+  hpa.dig(:spec, :metrics, 1, :resource, :target, :averageUtilization).should == 70
+end
+
+it "strips_autoscale_label_from_hpa" do
+  m = manifest(Kube::Cluster["Deployment"].new {
+    metadata.name = "web"
+    metadata.labels = {
+      "app.kubernetes.io/name": "web",
+      "app.kubernetes.io/autoscale": "1-5",
+    }
+    spec.selector.matchLabels = { app: "web" }
+    spec.template.metadata.labels = { app: "web" }
+    spec.template.spec.containers = [
+      { name: "web", image: "nginx" },
+    ]
+  })
+
+  Middleware::HPAForDeployment.new.call(m)
+  hpa_labels = m.resources.last.to_h.dig(:metadata, :labels)
+
+  hpa_labels[:"app.kubernetes.io/autoscale"].should.be.nil
+end
+
+it "skips_deployment_without_autoscale_label" do
+  m = manifest(Kube::Cluster["Deployment"].new {
+    metadata.name = "web"
+    spec.selector.matchLabels = { app: "web" }
+    spec.template.metadata.labels = { app: "web" }
+    spec.template.spec.containers = [
+      { name: "web", image: "nginx" },
+    ]
+  })
+
+  Middleware::HPAForDeployment.new.call(m)
+
+  m.resources.size.should == 1
+end
+
+it "skips_non_pod_bearing_resources" do
+  m = manifest(Kube::Cluster["ConfigMap"].new {
+    metadata.name = "config"
+    metadata.labels = { "app.kubernetes.io/autoscale": "1-5" }
+  })
+
+  Middleware::HPAForDeployment.new.call(m)
+
+  m.resources.size.should == 1
+end
+
+it "raises_on_invalid_range_format" do
+  m = manifest(Kube::Cluster["Deployment"].new {
+    metadata.name = "web"
+    metadata.labels = { "app.kubernetes.io/autoscale": "bad" }
+    spec.selector.matchLabels = { app: "web" }
+    spec.template.metadata.labels = { app: "web" }
+    spec.template.spec.containers = [
+      { name: "web", image: "nginx" },
+    ]
+  })
+
+  error = nil
+  begin
+    Middleware::HPAForDeployment.new.call(m)
+  rescue ArgumentError => e
+    error = e
+  end
+
+  error.message.should.include "Invalid autoscale label"
+end
+
+it "raises_on_invalid_range_values" do
+  m = manifest(Kube::Cluster["Deployment"].new {
+    metadata.name = "web"
+    metadata.labels = { "app.kubernetes.io/autoscale": "5-2" }
+    spec.selector.matchLabels = { app: "web" }
+    spec.template.metadata.labels = { app: "web" }
+    spec.template.spec.containers = [
+      { name: "web", image: "nginx" },
+    ]
+  })
+
+  error = nil
+  begin
+    Middleware::HPAForDeployment.new.call(m)
+  rescue ArgumentError => e
+    error = e
+  end
+
+  error.message.should.include "Invalid autoscale range"
+end
+
+it "works_with_statefulset" do
+  m = manifest(Kube::Cluster["StatefulSet"].new {
+    metadata.name = "db"
+    metadata.labels = { "app.kubernetes.io/autoscale": "1-3" }
+    spec.selector.matchLabels = { app: "db" }
+    spec.template.metadata.labels = { app: "db" }
+    spec.template.spec.containers = [
+      { name: "postgres", image: "postgres:16" },
+    ]
+  })
+
+  Middleware::HPAForDeployment.new.call(m)
+
+  m.resources.last.to_h.dig(:spec, :scaleTargetRef, :kind).should == "StatefulSet"
+end
+
+private
+
+  def manifest(*resources)
+    m = Kube::Cluster::Manifest.new
+    resources.each { |r| m << r }
+    m
+  end

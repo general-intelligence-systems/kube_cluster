@@ -21,16 +21,16 @@ module Kube
   end
 end
 
-test do
-  describe "KubeVirt::VirtualMachine" do
-    it "initializes without error" do
-      Kube::Cluster::Standard::KubeVirt::VirtualMachine
-        .new(
-          name: "my-virtual-machine"
-        )
-        .to_yaml
-        .is_a?(String)
-        .should == true
-    end
+__END__
+
+describe "KubeVirt::VirtualMachine" do
+  it "initializes without error" do
+    Kube::Cluster::Standard::KubeVirt::VirtualMachine
+      .new(
+        name: "my-virtual-machine"
+      )
+      .to_yaml
+      .is_a?(String)
+      .should == true
   end
 end

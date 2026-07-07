@@ -49,18 +49,18 @@ module Kube
   end
 end
 
-test do
-  describe "Role" do
-    it "expands the rules shorthand" do
-      yaml = Kube::Cluster::Standard::Role
-        .new(name: "r", rules: [
-          "secrets"        => %w[get list],
-          "batch/cronjobs" => %w[get],
-        ])
-        .to_yaml
+__END__
 
-      yaml.include?("resources").should == true
-      yaml.include?("batch").should == true
-    end
+describe "Role" do
+  it "expands the rules shorthand" do
+    yaml = Kube::Cluster::Standard::Role
+      .new(name: "r", rules: [
+        "secrets"        => %w[get list],
+        "batch/cronjobs" => %w[get],
+      ])
+      .to_yaml
+
+    yaml.include?("resources").should == true
+    yaml.include?("batch").should == true
   end
 end

@@ -42,16 +42,16 @@ module Kube
   end
 end
 
-test do
-  describe "CloudNativePg::ExternalSecret" do
-    it "initializes without error" do
-      Kube::Cluster::Standard::CloudNativePg::ExternalSecret
-        .new(
-          name: "my-external-secret"
-        )
-        .to_yaml
-        .is_a?(String)
-        .should == true
-    end
+__END__
+
+describe "CloudNativePg::ExternalSecret" do
+  it "initializes without error" do
+    Kube::Cluster::Standard::CloudNativePg::ExternalSecret
+      .new(
+        name: "my-external-secret"
+      )
+      .to_yaml
+      .is_a?(String)
+      .should == true
   end
 end

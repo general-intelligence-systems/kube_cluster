@@ -87,100 +87,100 @@ module Kube
   end
 end
 
-test do
-  Middleware = Kube::Cluster::Middleware
+__END__
 
-  it "generates_ingress_from_service_with_expose_label" do
-    m = manifest(Kube::Cluster["Service"].new {
-      metadata.name = "web"
-      metadata.namespace = "production"
-      metadata.labels = { "app.kubernetes.io/expose": "app.example.com" }
-      spec.selector = { app: "web" }
-      spec.ports = [{ name: "http", port: 80, targetPort: "http" }]
-    })
+Middleware = Kube::Cluster::Middleware
 
-    Middleware::IngressForService.new.call(m)
+it "generates_ingress_from_service_with_expose_label" do
+  m = manifest(Kube::Cluster["Service"].new {
+    metadata.name = "web"
+    metadata.namespace = "production"
+    metadata.labels = { "app.kubernetes.io/expose": "app.example.com" }
+    spec.selector = { app: "web" }
+    spec.ports = [{ name: "http", port: 80, targetPort: "http" }]
+  })
 
-    service, ingress = m.resources
-    ih = ingress.to_h
-    rule = ih.dig(:spec, :rules, 0)
+  Middleware::IngressForService.new.call(m)
 
-    rule.dig(:http, :paths, 0, :backend, :service, :port, :name).should == "http"
-  end
+  service, ingress = m.resources
+  ih = ingress.to_h
+  rule = ih.dig(:spec, :rules, 0)
 
-  it "custom_issuer_and_ingress_class" do
-    m = manifest(Kube::Cluster["Service"].new {
-      metadata.name = "web"
-      metadata.labels = { "app.kubernetes.io/expose": "app.example.com" }
-      spec.ports = [{ name: "http", port: 80 }]
-    })
-
-    Middleware::IngressForService.new(
-      issuer: "letsencrypt-staging",
-      ingress_class: "traefik",
-    ).call(m)
-
-    ingress = m.resources.last.to_h
-
-    ingress.dig(:metadata, :annotations, :"cert-manager.io/cluster-issuer").should == "letsencrypt-staging"
-  end
-
-  it "expose_true_uses_name_as_hostname" do
-    m = manifest(Kube::Cluster["Service"].new {
-      metadata.name = "api"
-      metadata.labels = { "app.kubernetes.io/expose": "true" }
-      spec.ports = [{ name: "http", port: 80 }]
-    })
-
-    Middleware::IngressForService.new.call(m)
-    ingress = m.resources.last.to_h
-
-    ingress.dig(:spec, :tls, 0, :hosts).should == ["api.local"]
-  end
-
-  it "strips_expose_label_from_ingress" do
-    m = manifest(Kube::Cluster["Service"].new {
-      metadata.name = "web"
-      metadata.labels = {
-        "app.kubernetes.io/expose": "app.example.com",
-        "app.kubernetes.io/name": "web",
-      }
-      spec.ports = [{ name: "http", port: 80 }]
-    })
-
-    Middleware::IngressForService.new.call(m)
-    ingress_labels = m.resources.last.to_h.dig(:metadata, :labels)
-
-    ingress_labels[:"app.kubernetes.io/expose"].should.be.nil
-  end
-
-  it "skips_service_without_expose_label" do
-    m = manifest(Kube::Cluster["Service"].new {
-      metadata.name = "web"
-      spec.ports = [{ name: "http", port: 80 }]
-    })
-
-    Middleware::IngressForService.new.call(m)
-
-    m.resources.size.should == 1
-  end
-
-  it "skips_non_service_resources" do
-    m = manifest(Kube::Cluster["Deployment"].new {
-      metadata.name = "web"
-      metadata.labels = { "app.kubernetes.io/expose": "app.example.com" }
-    })
-
-    Middleware::IngressForService.new.call(m)
-
-    m.resources.size.should == 1
-  end
-
-  private
-
-    def manifest(*resources)
-      m = Kube::Cluster::Manifest.new
-      resources.each { |r| m << r }
-      m
-    end
+  rule.dig(:http, :paths, 0, :backend, :service, :port, :name).should == "http"
 end
+
+it "custom_issuer_and_ingress_class" do
+  m = manifest(Kube::Cluster["Service"].new {
+    metadata.name = "web"
+    metadata.labels = { "app.kubernetes.io/expose": "app.example.com" }
+    spec.ports = [{ name: "http", port: 80 }]
+  })
+
+  Middleware::IngressForService.new(
+    issuer: "letsencrypt-staging",
+    ingress_class: "traefik",
+  ).call(m)
+
+  ingress = m.resources.last.to_h
+
+  ingress.dig(:metadata, :annotations, :"cert-manager.io/cluster-issuer").should == "letsencrypt-staging"
+end
+
+it "expose_true_uses_name_as_hostname" do
+  m = manifest(Kube::Cluster["Service"].new {
+    metadata.name = "api"
+    metadata.labels = { "app.kubernetes.io/expose": "true" }
+    spec.ports = [{ name: "http", port: 80 }]
+  })
+
+  Middleware::IngressForService.new.call(m)
+  ingress = m.resources.last.to_h
+
+  ingress.dig(:spec, :tls, 0, :hosts).should == ["api.local"]
+end
+
+it "strips_expose_label_from_ingress" do
+  m = manifest(Kube::Cluster["Service"].new {
+    metadata.name = "web"
+    metadata.labels = {
+      "app.kubernetes.io/expose": "app.example.com",
+      "app.kubernetes.io/name": "web",
+    }
+    spec.ports = [{ name: "http", port: 80 }]
+  })
+
+  Middleware::IngressForService.new.call(m)
+  ingress_labels = m.resources.last.to_h.dig(:metadata, :labels)
+
+  ingress_labels[:"app.kubernetes.io/expose"].should.be.nil
+end
+
+it "skips_service_without_expose_label" do
+  m = manifest(Kube::Cluster["Service"].new {
+    metadata.name = "web"
+    spec.ports = [{ name: "http", port: 80 }]
+  })
+
+  Middleware::IngressForService.new.call(m)
+
+  m.resources.size.should == 1
+end
+
+it "skips_non_service_resources" do
+  m = manifest(Kube::Cluster["Deployment"].new {
+    metadata.name = "web"
+    metadata.labels = { "app.kubernetes.io/expose": "app.example.com" }
+  })
+
+  Middleware::IngressForService.new.call(m)
+
+  m.resources.size.should == 1
+end
+
+private
+
+  def manifest(*resources)
+    m = Kube::Cluster::Manifest.new
+    resources.each { |r| m << r }
+    m
+  end
