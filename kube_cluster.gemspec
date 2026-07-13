@@ -30,6 +30,7 @@ Gem::Specification.new do |spec|
 
   spec.add_development_dependency "rake", "~> 13.0"
   spec.add_development_dependency "scampi", "~> 1.0"
+  spec.add_development_dependency "lefthook", "~> 2.1"
 
   spec.add_dependency "kube_schema", "~> 1.9.2"
   spec.add_dependency "kube_kubectl", "~> 2.0"

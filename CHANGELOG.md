@@ -5,6 +5,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-07-13
+
+### Added
+- `Standard::CDI::DataVolume` — a thin CDI `DataVolume` wrapper (was stubbed
+  out), pinned to `cdi.kubevirt.io/v1beta1/DataVolume` in the resolve table.
+- lefthook `pre-commit` hook that runs the full test suite (`bin/test`) before
+  every commit; add `lefthook` as a development dependency.
+
 ## [1.0.1] - 2026-07-13
 
 ### Added

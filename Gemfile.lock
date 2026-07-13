@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    kube_cluster (1.0.1)
+    kube_cluster (1.1.0)
       activesupport (~> 8.0)
       kube_kubectl (~> 2.0)
       kube_schema (~> 1.9.2)
@@ -135,6 +135,7 @@ GEM
     kube_schema (1.9.2)
       json_schemer (~> 2.5.0)
       rubyshell (~> 1.5.0)
+    lefthook (2.1.10)
     localhost (1.8.0)
       bake
     logger (1.7.0)
@@ -257,6 +258,7 @@ DEPENDENCIES
   bake-modernize
   bake-releases
   kube_cluster!
+  lefthook (~> 2.1)
   rake (~> 13.0)
   scampi (~> 1.0)
   utopia-project

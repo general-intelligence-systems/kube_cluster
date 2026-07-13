@@ -117,6 +117,9 @@ Kube::Cluster.config do
   # KubeVirt.
   resolve "VirtualMachine",           to: "kubevirt.io/v1/VirtualMachine"
 
+  # CDI (Containerized Data Importer).
+  resolve "DataVolume",               to: "cdi.kubevirt.io/v1beta1/DataVolume"
+
   # k3s HelmChart.
   resolve "HelmChart",                to: "helm.cattle.io/v1/HelmChart"
 
