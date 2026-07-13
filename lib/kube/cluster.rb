@@ -142,11 +142,12 @@ Kube::Cluster.config do
   resolve "PersesGlobalDatasource",   to: "perses.dev/v1alpha2/PersesGlobalDatasource"
 end
 
-standard_dir = "#{__dir__}/cluster/standard/"
+standard_root = "#{__dir__}/cluster/standard"
 Dir.glob("#{__dir__}/cluster/**/*.rb").sort.each do |path|
-  # The standard/ tree is opt-in: projects require the specific classes they
-  # use, so that resolve overrides can be configured beforehand.
-  next if path.start_with?(standard_dir)
+  # The standard/ tree is opt-in — via `require "kube/cluster/standard"` or a
+  # specific class — so that resolve overrides can be configured beforehand.
+  # Skip both the tree and its aggregator loader (cluster/standard.rb).
+  next if path == "#{standard_root}.rb" || path.start_with?("#{standard_root}/")
 
   require path
 end

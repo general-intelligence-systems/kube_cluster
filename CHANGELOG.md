@@ -5,6 +5,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2026-07-13
+
+### Added
+- `require "kube/cluster/standard"` — an aggregator that loads the entire
+  Standard tree at once, for projects that use most of it. The tree remains
+  opt-in (`require "kube/cluster"` alone does not load it), so resolve overrides
+  still take effect. The core auto-require now also skips this aggregator file.
+
 ## [1.0.0] - 2026-07-13
 
 ### Added
