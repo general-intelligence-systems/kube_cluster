@@ -22,6 +22,7 @@
           ];
 
           buildInputs = [
+            pkgs.trufflehog
             ruby
             pkgs.libyaml # psych gem
             pkgs.openssl # openssl gem
