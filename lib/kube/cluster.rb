@@ -109,6 +109,7 @@ Kube::Cluster.config do
   resolve "DecoratorController",      to: "metacontroller.k8s.io/v1alpha1/DecoratorController"
 
   # CloudNativePG.
+  resolve "Cluster",                  to: "postgresql.cnpg.io/v1/Cluster"
   resolve "Database",                 to: "postgresql.cnpg.io/v1/Database"
 
   # External Secrets Operator.
