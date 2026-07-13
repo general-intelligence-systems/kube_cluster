@@ -5,6 +5,20 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-07-13
+
+### Added
+- `Standard::VictoriaMetrics::VMRule` — a wrapper for the VictoriaMetrics
+  operator's `VMRule` CRD (pinned to `operator.victoriametrics.com/v1beta1`).
+  Rules are built from `VMRule::Group` objects, each exposing `rule`/`alert`
+  helpers that construct `Rule`/`Alert` leaves; the rule expression is the
+  return value of a block, so multi-line PromQL reads as a heredoc.
+- `Standard::VictoriaMetrics::VMAlert` — a wrapper for the VictoriaMetrics
+  operator's `VMAlert` CRD (pinned to `operator.victoriametrics.com/v1beta1`).
+  Wires `datasource`/`remoteWrite`/`remoteRead` and defaults `selectAllByDefault`
+  to true so it evaluates every `VMRule`; `notifier_url` is optional (recording
+  rules need no notifier).
+
 ## [1.3.1] - 2026-07-13
 
 ### Changed

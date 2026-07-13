@@ -128,7 +128,9 @@ Kube::Cluster.config do
   resolve "VLAgent",                  to: "operator.victoriametrics.com/v1/VLAgent"
   resolve "VLSingle",                 to: "operator.victoriametrics.com/v1/VLSingle"
   resolve "VMAgent",                  to: "operator.victoriametrics.com/v1beta1/VMAgent"
+  resolve "VMAlert",                  to: "operator.victoriametrics.com/v1beta1/VMAlert"
   resolve "VMNodeScrape",             to: "operator.victoriametrics.com/v1beta1/VMNodeScrape"
+  resolve "VMRule",                   to: "operator.victoriametrics.com/v1beta1/VMRule"
   resolve "VMServiceScrape",          to: "operator.victoriametrics.com/v1beta1/VMServiceScrape"
   resolve "VMSingle",                 to: "operator.victoriametrics.com/v1beta1/VMSingle"
 
