@@ -5,6 +5,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-07-13
+
+### Added
+- `Standard::CloudNativePg::PostgresCluster` — the standard single-node
+  PostgreSQL cluster (custom image, HA replication slots, logical WAL,
+  barman-cloud WAL archiving) preconfigured; deployment-specific spec (managed
+  roles, etc.) via the block.
+
 ## [1.2.1] - 2026-07-13
 
 ### Added
