@@ -5,6 +5,25 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2026-08-03
+
+### Added
+- `Standard::JuiceFS::Sync` — a wrapper for the juicefs-operator's `Sync` CRD
+  (pinned to `juicefs.io/v1`). `from`/`to` are the CRD's sink hashes, passed
+  through as-is. Documents two operator behaviours worth knowing before use: the
+  unquoted metadata-URL export that breaks `juicefsCE` sinks whose metaurl
+  contains `&`, and the `ttlSecondsAfterFinished` deletion that makes a
+  reconciler-managed Sync re-run forever.
+- `Standard::JuiceFS::PersistentVolume` — a statically-provisioned JuiceFS PV,
+  the only way to give a volume an exact, readable directory name (`subPath`)
+  rather than the `pvc-<uuid>` a StorageClass would assign.
+- `PersistentVolume` pinned to `v1/PersistentVolume` in the resolve table.
+
+### Changed
+- Requires kube_schema `~> 1.10.0`, which ships the `juicefs.io/v1` schemas.
+  These wrappers previously needed a local CRD-registration shim that downloaded
+  `dist/crd.yaml` at load time; that is no longer necessary.
+
 ## [1.4.0] - 2026-07-13
 
 ### Added

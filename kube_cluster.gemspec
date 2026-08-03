@@ -32,7 +32,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "scampi", "~> 1.0"
   spec.add_development_dependency "lefthook", "~> 2.1"
 
-  spec.add_dependency "kube_schema", "~> 1.9.2"
+  spec.add_dependency "kube_schema", "~> 1.10.0"
   spec.add_dependency "kube_kubectl", "~> 2.0"
   spec.add_dependency "activesupport", "~> 8.0"
 end

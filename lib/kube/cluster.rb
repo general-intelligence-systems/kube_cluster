@@ -92,6 +92,7 @@ require "kube/cluster/resource/persistence"
 Kube::Cluster.config do
   # Built-in Kubernetes kinds.
   resolve "ConfigMap",                to: "v1/ConfigMap"
+  resolve "PersistentVolume",         to: "v1/PersistentVolume"
   resolve "PersistentVolumeClaim",    to: "v1/PersistentVolumeClaim"
   resolve "Secret",                   to: "v1/Secret"
   resolve "Service",                  to: "v1/Service"
