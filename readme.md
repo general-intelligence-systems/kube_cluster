@@ -1,5 +1,7 @@
 # kube_cluster
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/general-intelligence-systems/kube_cluster)
+
 Ruby-native Kubernetes. Define, transform, and deploy cluster resources with pure Ruby.
 
 ## Usage
