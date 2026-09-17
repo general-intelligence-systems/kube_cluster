@@ -103,6 +103,8 @@ Kube::Cluster.config do
   resolve "Job",                      to: "batch/v1/Job"
   resolve "Role",                     to: "rbac.authorization.k8s.io/v1/Role"
   resolve "RoleBinding",              to: "rbac.authorization.k8s.io/v1/RoleBinding"
+  resolve "ClusterRole",              to: "rbac.authorization.k8s.io/v1/ClusterRole"
+  resolve "ClusterRoleBinding",       to: "rbac.authorization.k8s.io/v1/ClusterRoleBinding"
   resolve "CustomResourceDefinition", to: "apiextensions.k8s.io/v1/CustomResourceDefinition"
 
   # Metacontroller.

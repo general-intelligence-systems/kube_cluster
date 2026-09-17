@@ -2,16 +2,18 @@
 
 require "bundler/setup"
 require "kube/cluster"
+require "kube/cluster/standard/rbac_rules"
 
 module Kube
   module Cluster
     module Standard
       # A Role with an ergonomic rules shorthand. Each rule maps a resource
-      # spec to its verbs; the spec is "resource" (core API group) or
-      # "group/resource":
+      # spec to its verbs; the spec grammar ("resource", "resource/subresource",
+      # "group/resource", "group/resource/subresource") is RbacRules':
       #
       #   Role.new(rules: [
       #     "secrets"        => %w[get list],
+      #     "pods/log"       => %w[get],
       #     "batch/cronjobs" => %w[get],
       #   ])
       #
@@ -25,7 +27,7 @@ module Kube
 
           super() do
             metadata.name = name if name
-            self.rules = Role.build_rules(rules)
+            self.rules = RbacRules.build(rules)
             instance_exec(&block) if block
           end
         end
@@ -35,14 +37,7 @@ module Kube
         end
 
         def self.build_rules(rules)
-          entries = rules.is_a?(Hash) ? [rules] : Array(rules)
-
-          entries.flat_map do |entry|
-            entry.map do |spec, verbs|
-              group, resource = spec.include?("/") ? spec.split("/", 2) : ["", spec]
-              { apiGroups: [group], resources: [resource], verbs: Array(verbs) }
-            end
-          end
+          RbacRules.build(rules)
         end
       end
     end

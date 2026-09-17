@@ -5,6 +5,33 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.0] - 2026-09-17
+
+### Added
+- `Standard::RbacRules` — the rules-shorthand builder behind
+  `Standard::Role`, now a shared module. The spec grammar handles
+  `"resource"`, `"resource/subresource"`, `"group/resource"` and
+  `"group/resource/subresource"`: the first segment is an API group when
+  `Kube::Schema.api_groups` knows it (`batch`, `apps`, `argoproj.io`, ...) or
+  when it contains a dot (API groups are DNS subdomains, which covers CRD
+  groups no schema has registered). Verbs are stringified, so symbols work.
+- `Standard::ClusterRole` — the rules shorthand, cluster-wide.
+- `Standard::ClusterRoleBinding` — wires a ClusterRole to a ServiceAccount,
+  mirroring `Standard::RoleBinding`.
+- `Middleware::SetNamespace` now fills blank ServiceAccount subject
+  namespaces on ClusterRoleBinding as well as RoleBinding. ClusterRoleBinding
+  is cluster-scoped, so there is no metadata.namespace to copy from — the
+  middleware fills the subjects directly.
+- `ClusterRole` and `ClusterRoleBinding` pinned in the resolve table.
+
+### Changed
+- Requires kube_schema `~> 1.11.0` for `Kube::Schema.api_groups`.
+
+### Fixed
+- The rules shorthand parsed `"pods/exec"` as `apiGroups: ["pods"],
+  resources: ["exec"]` — a rule matching nothing. Core subresources now
+  render as `apiGroups: [""], resources: ["pods/exec"]`.
+
 ## [1.7.0] - 2026-09-17
 
 ### Added
