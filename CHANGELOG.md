@@ -5,6 +5,19 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] - 2026-09-17
+
+### Added
+- `Standard::EnvProcessing` now maps `ESO::ExternalSecret::KeyRef` (the struct
+  returned by `ExternalSecret#key`) to a `secretKeyRef` env var, mirroring the
+  support `VolumeProcessing` has always had. Unlike `.template`, `.key`
+  registers nothing on the ExternalSecret — it references a key the secret
+  already materialises (declared via `keys:` at construction, or by a
+  `.template` call elsewhere). This makes `Custom::PassboltSecret`-style
+  secrets — whose template is fully built at construction — usable from env
+  hashes, where previously the only option was a raw `valueFrom` hash or a
+  whole-secret `envFrom`.
+
 ## [1.6.0] - 2026-08-03
 
 ### Added
