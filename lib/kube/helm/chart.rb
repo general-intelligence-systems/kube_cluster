@@ -161,10 +161,21 @@ module Kube
         def parse_crds(yaml_output)
           return [] if yaml_output.nil? || yaml_output.strip.empty?
 
-          docs = YAML.safe_load_stream(yaml_output, permitted_classes: [Symbol])
+          docs = YAML.safe_load_stream(split_documents(yaml_output), permitted_classes: [Symbol])
           docs.compact
               .select { |doc| doc.is_a?(Hash) && doc["kind"] == "CustomResourceDefinition" }
               .map { |doc| Kube::Cluster["CustomResourceDefinition"].new(doc) }
+        end
+
+        # `helm show crds` concatenates the chart's crds/*.yaml WITHOUT a `---`
+        # between them, so a chart shipping several CRDs arrives as one document
+        # with duplicate top-level keys -- and every CRD but the last is lost
+        # silently. external-dns 1.22.0 ships dnsendpoints and dnsrecords that
+        # way, and only dnsrecords survived. Start a document at every top-level
+        # `apiVersion:`; a file that already carries its own `---` yields an
+        # empty document, which the caller compacts away.
+        def split_documents(yaml_output)
+          yaml_output.gsub(/\n(?=apiVersion:)/, "\n---\n")
         end
 
         # The chart source for helm commands — either a local path or a remote ref.

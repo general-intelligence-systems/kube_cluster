@@ -5,6 +5,15 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.1] - 2026-09-28
+
+### Fixed
+- `Chart#crds` no longer drops every CRD but the last for a chart shipping
+  several. `helm show crds` concatenates `crds/*.yaml` with no `---` between
+  them, so the stream parsed as a single document with duplicate top-level
+  keys. external-dns 1.22.0 hit this: `dnsendpoints` vanished and only
+  `dnsrecords` registered.
+
 ## [1.9.0] - 2026-09-28
 
 ### Added
