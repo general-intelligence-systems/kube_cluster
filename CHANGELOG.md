@@ -5,6 +5,25 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.0] - 2026-09-28
+
+### Added
+- Ruby pattern matching for resources and manifests, inherited from
+  kube_schema 1.12.0 (`Resource#deconstruct_keys`, `Manifest#deconstruct`):
+
+      deployment => {metadata: {name:, namespace:}}
+
+      Deployment = Kube::Cluster["Deployment"]
+      manifest => [Deployment => dep, *rest]
+
+  `Kube::Cluster["Deployment"]` cannot be written inline in a pattern — Ruby
+  parses `Const[...]` as array-pattern syntax, not a method call. Assign the
+  class to a constant, or pin the expression:
+  `^(Kube::Cluster["Deployment"])`.
+
+### Changed
+- Requires kube_schema `~> 1.12.0`.
+
 ## [1.8.0] - 2026-09-17
 
 ### Added
