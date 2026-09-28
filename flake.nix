@@ -2,30 +2,31 @@
   description = "Ruby gem flake";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/bd0ff2d3eac24699c3664d5966b9ef36f388e2ca"; # == this machine's system nixpkgs
     utils.url = "github:numtide/flake-utils";
+    mine.url = "github:n-at-han-k/flake.nix";
+    mine.inputs.nixpkgs.follows = "nixpkgs";
   };
-  outputs = { self, nixpkgs, utils }:
+  outputs = { self, nixpkgs, utils, mine }:
     utils.lib.eachDefaultSystem (system:
       let
+        # No mine.overlays.default: it overrides pkg-config, which stdenv
+        # splices, so the overlay rebuilds stdenv and all of nixpkgs from
+        # source. mine.inputs.nixpkgs.follows makes it redundant anyway.
         pkgs = nixpkgs.legacyPackages.${system};
-        ruby = pkgs.ruby_3_4; # Specify version
+        ruby = pkgs.ruby_3_4;
         kubectlWithKubeconfig = pkgs.writeShellScriptBin "kubectl" ''
           #!${pkgs.bash}/bin/bash
           KUBECONFIG="$PWD/kubeconfig.yaml" ${pkgs.kubectl}/bin/kubectl "$@"
         '';
       in
       {
-        devShells.default = pkgs.mkShell {
-          nativeBuildInputs = [
-            pkgs.pkg-config # native extension discovery
-          ];
-
+        # pkg-config, bundix, libyaml, openssl, overmind, tmux and `bundix -l`
+        # come from mkRubyShell.
+        devShells.default = mine.lib.${system}.mkRubyShell {
           buildInputs = [
             pkgs.trufflehog
             ruby
-            pkgs.libyaml # psych gem
-            pkgs.openssl # openssl gem
             kubectlWithKubeconfig
           ];
 
@@ -42,4 +43,3 @@
       }
     );
 }
-
