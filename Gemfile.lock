@@ -14,6 +14,7 @@ GEM
       securerandom (>= 0.3)
       tzinfo (~> 2.0, >= 2.0.5)
       uri (>= 0.13.1)
+    ast (2.4.3)
     async (2.39.0)
       console (~> 1.29)
       fiber-annotation
@@ -132,7 +133,9 @@ GEM
       gem_kit (~> 0.2)
       json_schemer (~> 2.5.0)
       rubyshell (~> 1.5.0)
+    language_server-protocol (3.17.0.6)
     lefthook (2.1.10)
+    lint_roller (1.1.0)
     localhost (1.8.0)
       bake
     logger (1.7.0)
@@ -164,6 +167,10 @@ GEM
     net-smtp (0.5.1)
       net-protocol
     openssl (4.0.2)
+    parallel (2.3.0)
+    parser (3.3.12.0)
+      ast (~> 2.4.1)
+      racc
     pp (0.6.3)
       prettyprint
     prettyprint (0.2.0)
@@ -183,11 +190,13 @@ GEM
     psych (5.3.1)
       date
       stringio
+    racc (1.8.1)
     rack (3.2.6)
     rackula (1.4.1)
       falcon (~> 0.46)
       samovar (~> 2.1)
       variant
+    rainbow (3.1.1)
     rake (13.4.2)
     rbs (4.0.2)
       logger
@@ -200,6 +209,21 @@ GEM
     regexp_parser (2.13.1)
     reline (0.6.3)
       io-console (~> 0.5)
+    rubocop (1.92.0)
+      json (>= 2.3)
+      language_server-protocol (~> 3.17.0.2)
+      lint_roller (~> 1.1.0)
+      parallel (>= 1.10)
+      parser (>= 3.3.0.2)
+      rainbow (>= 2.2.2, < 4.0)
+      regexp_parser (>= 2.11.3, < 3.0)
+      rubocop-ast (>= 1.49.0, < 2.0)
+      ruby-progressbar (~> 1.7)
+      unicode-display_width (>= 2.4.0, < 4.0)
+    rubocop-ast (1.50.0)
+      parser (>= 3.3.7.2)
+      prism (~> 1.7)
+    ruby-progressbar (1.13.0)
     rubyshell (1.5.0)
     rugged (1.9.0)
     samovar (2.4.1)
@@ -219,6 +243,9 @@ GEM
     tsort (0.2.0)
     tzinfo (2.0.6)
       concurrent-ruby (~> 1.0)
+    unicode-display_width (3.3.0)
+      unicode-emoji (~> 4.3)
+    unicode-emoji (4.3.0)
     uri (1.1.1)
     utopia (2.32.1)
       bake (~> 0.20)
@@ -261,6 +288,7 @@ DEPENDENCIES
   kube_schema (~> 2.0)
   lefthook (~> 2.1)
   rake (~> 13.0)
+  rubocop
   scampi (~> 1.0)
   utopia-project
 

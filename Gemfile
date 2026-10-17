@@ -9,6 +9,7 @@ gem "kube_schema", "~> 2.0"
 gem "lefthook", "~> 2.1"
 gem "rake", "~> 13.0"
 gem "scampi", "~> 1.0"
+gem "rubocop"
 
 group :release do
 	gem "gem_kit-release", "~> 0.3"
