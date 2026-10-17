@@ -6,7 +6,7 @@ require "active_support/core_ext/string/inflections"
 
 require_relative "../kube/errors"
 require_relative "../kube_cluster/version"
-require_relative "cluster/script_command"
+require_relative "cluster/script_commands"
 require 'kube/ctl'
 require_relative 'helm/repo'
 
@@ -20,31 +20,29 @@ module Kube
       Instance.new(kubeconfig: kubeconfig)
     end
 
-    # Internal table mapping a bare kind to the group/version/Kind it should
-    # resolve to. Consulted first by Kube::Cluster.[] so a bare lookup lands on
-    # a pinned version instead of whatever the schema registry defaults to.
+    # Maps a bare kind to the group/version/Kind to resolve to.
+    # @returns [Hash] the resolve table, consulted first by Kube::Cluster.[].
     def self.resolve_table
       @resolve_table ||= {}
     end
 
-    # Configure kind resolution:
+    # Configures kind resolution; call before loading Standard classes.
     #
+    # @example
     #   Kube::Cluster.config do
     #     resolve "Perses", to: "perses.dev/v1alpha2/Perses"
     #   end
     #
-    # Ordering matters: Kube::Cluster.[] memoizes per kind, and the Standard
-    # classes bind their superclass at definition time (e.g.
-    # `class Perses < Kube::Cluster["Perses"]`). A resolve therefore only takes
-    # effect for kinds looked up afterwards — so configure before requiring any
-    # kube/cluster/standard class. If Standard is already loaded, warn: its
-    # classes have already bound their (now stale) superclasses.
+    # @yields {} evaluated against Config, to call #resolve.
+    # @returns [Config] the resolution config module.
     def self.config(&block)
       if const_defined?(:Standard, false)
         warn "Kube::Cluster::Standard was loaded before Kube::Cluster.config — " \
           "resolve overrides will not affect the already-bound Standard classes."
       end
-      Config.instance_eval(&block) if block
+      if block
+        Config.instance_eval(&block)
+      end
       Config
     end
 
@@ -56,12 +54,13 @@ module Kube
       end
     end
 
-    # Returns an anonymous subclass of Kube::Cluster::Resource for the
-    # given Kubernetes kind, mirroring Kube::Schema[kind] but with
-    # dirty tracking, persistence, and resource helper methods.
+    # A Resource subclass for a kind, with dirty tracking.
     #
+    # @example
     #   Kube::Cluster["Deployment"].new { metadata.name = "web" }
     #
+    # @parameter kind [String] a Kubernetes kind, or a resolved GVK string.
+    # @returns [Class] an anonymous subclass of Kube::Cluster::Resource.
     def self.[](kind)
       kind = resolve_table.fetch(kind, kind)
       @resource_classes ||= {}
@@ -85,10 +84,8 @@ require "kube/cluster/middleware"
 require "kube/cluster/resource/dirty_tracking"
 require "kube/cluster/resource/persistence"
 
-# Kind resolution overrides. Registered here, at load time, so the pins are in
-# place before a project requires any kube/cluster/standard class (those bind
-# Kube::Cluster[kind] at definition time). The standard tree is deliberately not
-# auto-required below — projects require the specific classes they use.
+# Kind resolution overrides, registered here before any Standard class loads.
+# Standard classes bind Kube::Cluster[kind] at definition time, so a resolve must be registered first.
 Kube::Cluster.config do
   # Built-in Kubernetes kinds.
   resolve "ConfigMap",                to: "v1/ConfigMap"
@@ -169,10 +166,10 @@ end
 
 standard_root = "#{__dir__}/cluster/standard"
 Dir.glob("#{__dir__}/cluster/**/*.rb").sort.each do |path|
-  # The standard/ tree is opt-in — via `require "kube/cluster/standard"` or a
-  # specific class — so that resolve overrides can be configured beforehand.
-  # Skip both the tree and its aggregator loader (cluster/standard.rb).
-  next if path == "#{standard_root}.rb" || path.start_with?("#{standard_root}/")
+  # The standard/ tree loads on demand, so resolves can be set up first.
+  if path == "#{standard_root}.rb" || path.start_with?("#{standard_root}/")
+    next
+  end
 
   require path
 end

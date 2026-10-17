@@ -17,11 +17,7 @@ module Kube
   module Cluster
     # Base class for manifest middleware.
     #
-    # Middleware receives the full manifest and mutates it in place.
-    # Each middleware is responsible for iterating resources as needed.
-    #
-    # Transform example:
-    #
+    # @example Transform: mutate resources in place
     #   class AddTeamLabel < Middleware
     #     def call(manifest)
     #       manifest.resources.map! do |resource|
@@ -32,8 +28,7 @@ module Kube
     #     end
     #   end
     #
-    # Generative example:
-    #
+    # @example Generative: add new resources to the manifest
     #   class ServiceForDeployment < Middleware
     #     def call(manifest)
     #       generated = []
@@ -44,7 +39,6 @@ module Kube
     #       manifest.resources.concat(generated)
     #     end
     #   end
-    #
     class Middleware
       DEFAULT_FILTER = -> (x) {true}
 
@@ -53,11 +47,12 @@ module Kube
         @opts = opts
       end
 
-      # Build an anonymous middleware class from a block.
-      # The block becomes the +#call+ method and runs via
-      # +instance_exec+, so +filter+, +deep_merge+, and
-      # +@opts+ are all available inside it.
+      # Build an anonymous Middleware subclass from a block.
+      # @parameter defaults [Hash] baked-in filter/opts for #initialize.
+      # @yields {|manifest| ...} the block becomes #call, via instance_exec.
+      # @returns [Class] a Middleware subclass.
       #
+      # @example
       #   Middleware.build(filter: ->(r) { r.pod_bearing? }) do |manifest|
       #     manifest.resources.map! do |resource|
       #       filter(resource) do
@@ -67,7 +62,6 @@ module Kube
       #       end
       #     end
       #   end
-      #
       def self.build(**defaults, &block)
         Class.new(self) do
           define_method(:initialize) do |**overrides|
@@ -84,7 +78,7 @@ module Kube
           @filter = DEFAULT_FILTER
         end
 
-        # Usage:
+        # @example
         #   def call(manifest)
         #     manifest.resources.map! do |resource|
         #       filter(resource) do
@@ -99,8 +93,8 @@ module Kube
         end
       end
 
-      # Override in subclasses. Receives the full manifest,
-      # mutates it in place.
+      # Override in subclasses to mutate the manifest in place.
+      # @parameter manifest [Manifest] the full manifest to mutate.
       def call(manifest)
       end
 

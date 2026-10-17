@@ -6,25 +6,19 @@ require "kube/cluster"
 module Kube
   module Cluster
     class Middleware
-      # Generates an Ingress for every Service whose source resource
-      # carries the +app.kubernetes.io/expose+ label.
+      # Generates an Ingress from the +app.kubernetes.io/expose+ label.
       #
-      # The label value is the hostname:
-      #
+      # @example The label value is the hostname, or +"true"+ for a placeholder
       #   metadata.labels = { "app.kubernetes.io/expose": "app.example.com" }
       #
-      # Set to +"true"+ to use the resource name as a hostname placeholder
-      # (useful when a later middleware or the manifest class resolves it).
+      # @parameter issuer [String] cert-manager ClusterIssuer (default: "letsencrypt-prod").
+      # @parameter ingress_class [String] IngressClassName (default: "nginx").
       #
-      # Options:
-      #   issuer:          — cert-manager ClusterIssuer name (default: "letsencrypt-prod")
-      #   ingress_class:   — IngressClassName (default: "nginx")
-      #
+      # @example
       #   stack do
       #     use Middleware::IngressForService
       #     use Middleware::IngressForService, issuer: "letsencrypt-staging"
       #   end
-      #
       class IngressForService < Middleware
         LABEL = :"app.kubernetes.io/expose"
 
@@ -35,10 +29,14 @@ module Kube
 
           manifest.resources.each do |resource|
             filter(resource) do
-              next unless resource.kind == "Service"
+              unless resource.kind == "Service"
+                next
+              end
 
               host = resource.label(LABEL)
-              next unless host
+              unless host
+                next
+              end
 
               h = resource.to_h
               name      = h.dig(:metadata, :name)
@@ -49,11 +47,15 @@ module Kube
               port_name = Array(h.dig(:spec, :ports)).first&.dig(:name) || "http"
 
               # Use resource name as hostname fallback if label is just "true"
-              host = "#{name}.local" if host == "true"
+              if host == "true"
+                host = "#{name}.local"
+              end
 
               generated << Kube::Cluster["Ingress"].new {
                 metadata.name      = name
-                metadata.namespace = namespace if namespace
+                if namespace
+                  metadata.namespace = namespace
+                end
                 metadata.labels    = labels.reject { |k, _| k == LABEL }
                 metadata.annotations = {
                   "cert-manager.io/cluster-issuer":           issuer,
@@ -72,7 +74,8 @@ module Kube
                         path:     "/",
                         pathType: "Prefix",
                         backend:  { service: { name: name, port: { name: port_name } } },
-                      }],
+                      }
+],
                     },
                   },
                 ]

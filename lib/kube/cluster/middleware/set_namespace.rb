@@ -6,12 +6,9 @@ require 'kube/cluster'
 module Kube
   module Cluster
     class Middleware
-      # Sets +metadata.namespace+ on all namespace-scoped resources,
-      # skipping HelmCharts and resources that already have a
-      # non-default namespace set.
-      #
+      # Sets +metadata.namespace+ on namespace-scoped resources.
+      # @example
       #   use SetNamespace, 'authelia'
-      #
       class SetNamespace < Middleware
         def initialize(namespace)
           super(filter: ->(r) { r.kind != 'HelmChart' })
@@ -21,11 +18,9 @@ module Kube
         def call(manifest)
           manifest.resources.map! { |resource|
             filter(resource) {
-              # A binding's ServiceAccount subjects need an explicit
-              # namespace; fill in any left blank with the target namespace so
-              # same-namespace bindings (e.g. ServiceAccountWithRole) resolve.
-              # ClusterRoleBinding is cluster-scoped, so this runs before the
-              # scope check below.
+              # Fill blank ServiceAccount subject namespaces with the target.
+              # This lets same-namespace bindings, e.g. ServiceAccountWithRole, resolve.
+              # Runs before the scope check: a cluster-scoped ClusterRoleBinding can still carry namespaced subjects.
               if ['RoleBinding', 'ClusterRoleBinding'].include?(resource.kind)
                 h = resource.to_h
                 if h[:subjects].is_a?(Array)
@@ -44,7 +39,9 @@ module Kube
                 end
               end
 
-              next resource if resource.cluster_scoped?
+              if resource.cluster_scoped?
+                next resource
+              end
 
               h = resource.to_h
               h[:metadata] ||= {}

@@ -6,16 +6,14 @@ require "kube/cluster"
 module Kube
   module Cluster
     class Middleware
-      # Merges annotations into +metadata.annotations+ on every resource.
-      # Existing annotations are preserved; the supplied annotations act
-      # as defaults that can be overridden per-resource.
+      # Merges annotations into +metadata.annotations+; existing ones win.
       #
+      # @example
       #   stack do
       #     use Middleware::Annotations,
       #       "prometheus.io/scrape": "true",
       #       "prometheus.io/port":   "9090"
       #   end
-      #
       class Annotations < Middleware
         def call(manifest)
           annotations = @opts.transform_keys(&:to_sym).transform_values(&:to_s)

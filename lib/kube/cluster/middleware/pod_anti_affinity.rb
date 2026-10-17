@@ -6,21 +6,14 @@ require "kube/cluster"
 module Kube
   module Cluster
     class Middleware
-      # Injects soft pod anti-affinity on pod-bearing resources so
-      # that pods prefer to spread across nodes.
+      # Injects soft pod anti-affinity so pods prefer spreading out.
       #
-      # The anti-affinity uses the resource's own +matchLabels+ from
-      # +spec.selector.matchLabels+ as the label selector, and
-      # +kubernetes.io/hostname+ as the topology key.
-      #
-      # Resources that already have +spec.template.spec.affinity+
-      # set are left untouched.
-      #
+      # @parameter topology_key [String] default: "kubernetes.io/hostname".
+      # @example Skips resources that already set spec.template.spec.affinity
       #   stack do
       #     use Middleware::PodAntiAffinity
       #     use Middleware::PodAntiAffinity, topology_key: "topology.kubernetes.io/zone"
       #   end
-      #
       class PodAntiAffinity < Middleware
         def call(manifest)
           topology_key = @opts.fetch(:topology_key, "kubernetes.io/hostname")
@@ -28,26 +21,34 @@ module Kube
 
           manifest.resources.map! do |resource|
             filter(resource) do
-              next resource unless resource.pod_bearing?
+              unless resource.pod_bearing?
+                next resource
+              end
 
               h = resource.to_h
               pod_spec = resource.pod_template(h)
-              next resource unless pod_spec
+              unless pod_spec
+                next resource
+              end
 
               # Don't overwrite existing affinity configuration.
-              next resource if pod_spec[:affinity]
+              if pod_spec[:affinity]
+                next resource
+              end
 
               match_labels = h.dig(:spec, :selector, :matchLabels)
-              next resource unless match_labels && !match_labels.empty?
+              unless match_labels && !match_labels.empty?
+                next resource
+              end
 
               pod_spec[:affinity] = {
                 podAntiAffinity: {
                   preferredDuringSchedulingIgnoredDuringExecution: [
                     {
-                      weight: weight,
+                      weight:          weight,
                       podAffinityTerm: {
                         labelSelector: { matchLabels: match_labels },
-                        topologyKey: topology_key,
+                        topologyKey:   topology_key,
                       },
                     },
                   ],

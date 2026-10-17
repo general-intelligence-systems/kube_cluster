@@ -9,54 +9,51 @@ module Kube
   module Helm
     # Represents a Helm Chart.yaml as a Ruby object.
     #
-    # The Chart holds metadata from Chart.yaml and can render resources
-    # via #apply_values. It can be backed by either a local directory
-    # (with templates on disk) or a remote chart reference.
-    #
-    #   # Virtual chart (just metadata, no templates)
+    # @example Virtual chart (just metadata, no templates)
     #   chart = Kube::Helm::Chart.new {
     #     name = "my-app"
     #     version = "1.0.0"
     #     appVersion = "3.4.5"
     #   }
     #
-    #   # Load from a local chart directory
+    # @example Load from a local chart directory
     #   chart = Kube::Helm::Chart.open("./charts/my-app")
     #   manifest = chart.apply_values({ "replicaCount" => 3 })
     #
-    #   # From a remote repo
+    # @example From a remote repo
     #   manifest = Kube::Helm::Repo
     #     .new("bitnami", url: "https://charts.bitnami.com/bitnami")
     #     .fetch("nginx", version: "18.1.0")
     #     .apply_values({ "replicaCount" => 3 })
-    #
     class Chart
       attr_reader :path, :ref, :cluster
 
-      # Open a chart from a local directory. Reads Chart.yaml and stores
-      # the path so that helm commands run against the local chart.
-      #
-      # @param path [String] path to the chart directory
-      # @param cluster [Kube::Cluster::Instance, nil] optional cluster connection
-      # @return [Chart]
+      # Open a chart from a local directory.
+      # @parameter path [String] path to the chart directory.
+      # @parameter cluster [Kube::Cluster::Instance, nil] an optional cluster connection.
+      # @returns [Chart] the chart, with path set for local helm commands.
       def self.open(path, cluster: nil)
         chart_file = File.join(path, "Chart.yaml")
-        raise Kube::Error, "No Chart.yaml found at #{path}" unless File.exist?(chart_file)
+        unless File.exist?(chart_file)
+          raise Kube::Error, "No Chart.yaml found at #{path}"
+        end
 
         yaml = YAML.safe_load_file(chart_file)
         new(yaml, path: path, cluster: cluster)
       end
 
-      # @param data [Hash] Chart.yaml content (string or symbol keys)
-      # @param path [String, nil] filesystem path to chart directory (local charts)
-      # @param ref [String, nil] chart reference for helm commands (remote charts)
-      # @param cluster [Kube::Cluster::Instance, nil] optional cluster connection
+      # @parameter data [Hash] Chart.yaml content, string or symbol keyed.
+      # @parameter path [String, nil] a filesystem path to a local chart directory.
+      # @parameter ref [String, nil] a chart reference for helm commands on remote charts.
+      # @parameter cluster [Kube::Cluster::Instance, nil] an optional cluster connection.
       def initialize(data = {}, path: nil, ref: nil, cluster: nil, &block)
         @data    = deep_symbolize_keys(data)
         @path    = path
         @ref     = ref
         @cluster = cluster
-        @data.instance_exec(&block) if block_given?
+        if block_given?
+          @data.instance_exec(&block)
+        end
       end
 
       def name         = @data[:name]
@@ -66,25 +63,27 @@ module Kube
       def type         = @data[:type]
       def dependencies = @data[:dependencies] || []
 
-      # Render the chart templates with values applied.
-      #
-      # Shells out to `helm template` and returns a Manifest of typed
-      # Resource objects.
-      #
-      # @param values [Hash] values to apply to the chart templates
-      # @param release [String, nil] release name (defaults to chart name)
-      # @param namespace [String, nil] namespace for rendered resources
-      # @return [Kube::Schema::Manifest]
+      # Renders the chart templates with values applied.
+      # @parameter values [Hash] values to apply to the chart templates.
+      # @parameter release [String, nil] a release name, defaulting to the chart name.
+      # @parameter namespace [String, nil] a namespace for the rendered resources.
+      # @returns [Kube::Schema::Manifest] the rendered resources, via `helm template`.
       def apply_values(values, release: nil, namespace: nil)
-        raise Kube::Error, "No chart source" unless source
+        unless source
+          raise Kube::Error, "No chart source"
+        end
 
         release_name = release || name
         source_ref = source
         ver = version_flag
 
         cmd = helm.call { template.(release_name).(source_ref).include_crds(true) }
-        cmd = cmd.version(ver) if ver
-        cmd = cmd.namespace(namespace) if namespace
+        if ver
+          cmd = cmd.version(ver)
+        end
+        if namespace
+          cmd = cmd.namespace(namespace)
+        end
 
         if values.is_a?(Hash) && values.any?
           tmpfile = write_values_tempfile(values)
@@ -95,37 +94,40 @@ module Kube
       end
 
       # Show the chart's default values.
-      #
-      # @return [Hash] the default values as a Ruby hash
+      # @returns [Hash] the default values, via `helm show values`.
       def show_values
-        raise Kube::Error, "No chart source" unless source
+        unless source
+          raise Kube::Error, "No chart source"
+        end
 
         source_ref = source
         ver = version_flag
         cmd = helm.call { show.values.(source_ref) }
-        cmd = cmd.version(ver) if ver
+        if ver
+          cmd = cmd.version(ver)
+        end
 
         YAML.safe_load(helm.run(cmd.to_s), permitted_classes: [Symbol]) || {}
       end
 
-      # Return the chart's CRDs as Kube::Cluster::CustomResourceDefinition objects.
+      # The chart's CRDs, as typed CustomResourceDefinition objects.
       #
-      # First tries `helm show crds`. If that returns nothing (some charts
-      # ship CRDs in templates rather than the crds/ directory), falls back
-      # to rendering via `helm template --set installCRDs=true` and filtering
-      # for CustomResourceDefinition resources.
-      #
+      # @example
       #   chart.crds.each do |crd|
       #     s = crd.to_json_schema
       #     Kube::Schema.register(s[:kind], schema: s[:schema], api_version: s[:api_version])
       #   end
       #
-      # @return [Array<Kube::Cluster::CustomResourceDefinition>]
+      # @returns [Array(Kube::Cluster::CustomResourceDefinition)] the chart's CRDs.
       def crds
-        raise Kube::Error, "No chart source" unless source
+        unless source
+          raise Kube::Error, "No chart source"
+        end
 
         results = crds_from_show
-        results = crds_from_template if results.empty?
+        if results.empty?
+          results = crds_from_template
+        end
         results
       end
 
@@ -139,7 +141,9 @@ module Kube
           source_ref = source
           ver = version_flag
           cmd = helm.call { show.crds.(source_ref) }
-          cmd = cmd.version(ver) if ver
+          if ver
+            cmd = cmd.version(ver)
+          end
 
           yaml_output = helm.run(cmd.to_s)
           parse_crds(yaml_output)
@@ -151,7 +155,9 @@ module Kube
           release_name = name || "crds"
 
           cmd = helm.call { template.(release_name).(source_ref).include_crds(true) }
-          cmd = cmd.version(ver) if ver
+          if ver
+            cmd = cmd.version(ver)
+          end
           cmd = cmd.set("installCRDs=true")
 
           yaml_output = helm.run(cmd.to_s)
@@ -159,31 +165,32 @@ module Kube
         end
 
         def parse_crds(yaml_output)
-          return [] if yaml_output.nil? || yaml_output.strip.empty?
-
-          docs = YAML.safe_load_stream(split_documents(yaml_output), permitted_classes: [Symbol])
-          docs.compact
-              .select { |doc| doc.is_a?(Hash) && doc["kind"] == "CustomResourceDefinition" }
-              .map { |doc| Kube::Cluster["CustomResourceDefinition"].new(doc) }
+          if yaml_output.nil? || yaml_output.strip.empty?
+            []
+          else
+            docs = YAML.safe_load_stream(split_documents(yaml_output), permitted_classes: [Symbol])
+            docs.compact
+                .select { |doc| doc.is_a?(Hash) && doc["kind"] == "CustomResourceDefinition" }
+                .map { |doc| Kube::Cluster["CustomResourceDefinition"].new(doc) }
+          end
         end
 
-        # `helm show crds` concatenates the chart's crds/*.yaml WITHOUT a `---`
-        # between them, so a chart shipping several CRDs arrives as one document
-        # with duplicate top-level keys -- and every CRD but the last is lost
-        # silently. external-dns 1.22.0 ships dnsendpoints and dnsrecords that
-        # way, and only dnsrecords survived. Start a document at every top-level
-        # `apiVersion:`; a file that already carries its own `---` yields an
-        # empty document, which the caller compacts away.
+        # Splits concatenated CRD YAML at each top-level `apiVersion:`.
+        # @parameter yaml_output [String] the raw `helm show crds` output, which
+        #   joins several CRDs without a "---", silently losing all but the last.
+        # @returns [String] the same YAML, with "---" before each document.
         def split_documents(yaml_output)
           yaml_output.gsub(/\n(?=apiVersion:)/, "\n---\n")
         end
 
-        # The chart source for helm commands — either a local path or a remote ref.
+        # The chart source for helm commands.
+        # @returns [String, nil] the local path, the remote ref, or nil.
         def source
           @path || @ref
         end
 
         # Version flag for remote charts. Local charts don't need --version.
+        # @returns [String, nil] the chart version, or nil for local charts.
         def version_flag
           @ref ? version : nil
         end
@@ -193,10 +200,10 @@ module Kube
         end
 
         def write_values_tempfile(values)
-          tmpfile = Tempfile.new(["helm-values-", ".yaml"])
-          tmpfile.write(deep_stringify_keys(values).to_yaml)
-          tmpfile.flush
-          tmpfile
+          Tempfile.new(["helm-values-", ".yaml"]).tap do |tmpfile|
+            tmpfile.write(deep_stringify_keys(values).to_yaml)
+            tmpfile.flush
+          end
         end
 
         def deep_stringify_keys(obj)

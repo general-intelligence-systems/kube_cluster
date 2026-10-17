@@ -1,8 +1,5 @@
 # frozen_string_literal: true
 
-#require_relative "resource/dirty_tracking"
-#require_relative "resource/persistence"
-#require_relative "resource/extensions/custom_resource_definition"
 require "bundler/setup"
 require "kube/cluster"
 
@@ -45,83 +42,96 @@ module Kube
 
         begin
           extend Object.const_get(
-            "Kube::Cluster::Resource::Extensions::#{kind}"
+            "Kube::Cluster::Resource::Extensions::#{kind}",
           )
         rescue
           nil
         end
       end
 
-      # Build a new resource of the same schema subclass from a hash.
+      # Build a new resource of the same subclass.
+      # @parameter hash [Hash] the resource data, with :kind and :apiVersion.
+      # @returns [Resource] a new instance looked up via Kube::Cluster[].
+      #
+      # @example self.class.new(**hash) would raise for a subclass like this
+      #   class ExampleServiceSubclass < Kube::Cluster["Service"]
+      #     def initialize(name:, port:, **options, &block)
+      #       super() { metadata.name = name }
+      #     end
+      #   end
       def rebuild(hash = {})
-        # self.class.new(**hash) would throw an error if you do something like this:
-        #
-        # class ExampleServiceSubclass < Kube::Cluster["Service"]
-        #   def initialize(name:, port:, **options, &block)
-        #     super() {
-        #       metadata.name = name
-        #       metadata.labels = { "app" => name }
-        #       spec.selector = { "app" => name }
-        #       spec.ports = [{ port: port, targetPort: port, protocol: "TCP" }]
-        #       instance_exec(&block) if block_given?
-        #     }
-        #   end
-        # end
-        #
-        # Therefore we must make sure that we're rebuilding from the 
-        # initial Kube::Cluster object instead... NOT Kube::Schema...
-        #
         kind = hash.delete(:kind).to_s
         api_version = hash.delete(:apiVersion)&.to_s
-        lookup = api_version ? "#{api_version}/#{kind}" : kind
+        if api_version
+          lookup = "#{api_version}/#{kind}"
+        else
+          lookup = kind
+        end
         Kube::Cluster[lookup].new(**hash)
       end
 
       # Read a label value from the resource.
+      # @parameter key [String, Symbol] the label key.
+      # @returns [String, nil] the label value, if set.
       def label(key)
         labels = to_h.dig(:metadata, :labels) || {}
         labels[key.to_sym] || labels[key.to_s]
       end
 
       # Read an annotation value from the resource.
+      # @parameter key [String, Symbol] the annotation key.
+      # @returns [String, nil] the annotation value, if set.
       def annotation(key)
         annotations = to_h.dig(:metadata, :annotations) || {}
         annotations[key.to_sym] || annotations[key.to_s]
       end
 
       # The resource kind as a String (e.g. "Deployment").
+      # @returns [String] the resource kind.
       def kind
         h = to_h
         (h[:kind] || h["kind"]).to_s
       end
 
       # Is this a resource that contains a pod template?
+      # @returns [Boolean] true for Deployment, Job, CronJob, etc.
       def pod_bearing?
         POD_BEARING_KINDS.include?(kind)
       end
 
       # Is this a cluster-scoped resource (no namespace)?
+      # @returns [Boolean] true for Namespace, ClusterRole, etc.
       def cluster_scoped?
         CLUSTER_SCOPED_KINDS.include?(kind)
       end
 
-      # Returns the pod template spec path from a resource hash,
-      # accounting for CronJob's extra nesting.
+      # The pod template spec path, accounting for CronJob's nesting.
+      # @parameter hash [Hash] a resource hash.
+      # @returns [Hash, nil] the pod spec at that path.
       def pod_template(hash)
         if (hash[:kind] || hash["kind"]).to_s == "CronJob"
-          hash.dig(:spec, :jobTemplate, :spec, :template, :spec)
+          hash.dig(
+            :spec,
+            :jobTemplate,
+            :spec,
+            :template,
+            :spec,
+          )
         else
           hash.dig(:spec, :template, :spec)
         end
       end
 
-      # Walk every container list in a pod spec (containers,
-      # initContainers) and yield each container hash.
+      # Walk containers and initContainers, yielding each container.
+      # @parameter pod_spec [Hash, nil] a pod spec.
+      # @yields {|container| ...} each container hash.
       def each_container(pod_spec, &block)
-        return unless pod_spec
-
-        [:containers, :initContainers].each do |key|
-          Array(pod_spec[key]).each(&block)
+        if pod_spec
+          [:containers, :initContainers].each do |key|
+            Array(pod_spec[key]).each(&block)
+          end
+        else
+          nil
         end
       end
 

@@ -6,38 +6,38 @@ require "kube/cluster"
 module Kube
   module Cluster
     class Middleware
-      # Generates a Service for every pod-bearing resource that has
-      # containers with named ports.
+      # Generates a Service for pod-bearing resources with named ports.
       #
-      # The generated Service uses +spec.selector.matchLabels+ from
-      # the source resource and maps each named container port.
-      #
-      # Labels and namespace are copied from the source resource, so
-      # subsequent middleware (Labels, Namespace, etc.) will also
-      # apply to the generated Service.
-      #
+      # @example Labels/namespace copy over, so later middleware also applies
       #   stack do
       #     use Middleware::ServiceForDeployment
       #   end
-      #
       class ServiceForDeployment < Middleware
         def call(manifest)
           generated = []
 
           manifest.resources.each do |resource|
             filter(resource) do
-              next unless resource.pod_bearing?
+              unless resource.pod_bearing?
+                next
+              end
 
               h = resource.to_h
               ports = extract_ports(resource, h)
-              next if ports.empty?
+              if ports.empty?
+                next
+              end
 
               match_labels = h.dig(:spec, :selector, :matchLabels)
-              next unless match_labels && !match_labels.empty?
+              unless match_labels && !match_labels.empty?
+                next
+              end
 
               generated << Kube::Cluster["Service"].new {
                 metadata.name      = h.dig(:metadata, :name)
-                metadata.namespace = h.dig(:metadata, :namespace) if h.dig(:metadata, :namespace)
+                if h.dig(:metadata, :namespace)
+                  metadata.namespace = h.dig(:metadata, :namespace)
+                end
                 metadata.labels    = h.dig(:metadata, :labels) || {}
 
                 spec.selector = match_labels
@@ -60,15 +60,19 @@ module Kube
 
           def extract_ports(resource, hash)
             pod_spec = resource.pod_template(hash)
-            return [] unless pod_spec
-
-            ports = []
-            resource.each_container(pod_spec) do |container|
-              Array(container[:ports]).each do |port|
-                ports << port if port[:name]
+            if pod_spec
+              ports = []
+              resource.each_container(pod_spec) do |container|
+                Array(container[:ports]).each do |port|
+                  if port[:name]
+                    ports << port
+                  end
+                end
               end
+              ports
+            else
+              []
             end
-            ports
           end
       end
     end

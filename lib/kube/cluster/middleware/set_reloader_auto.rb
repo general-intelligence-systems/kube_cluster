@@ -6,12 +6,9 @@ require 'kube/cluster'
 module Kube
   module Cluster
     class Middleware
-      # Adds +reloader.stakater.com/auto: "true"+ to Deployments,
-      # StatefulSets, and DaemonSets so Stakater Reloader triggers
-      # rolling restarts when referenced ConfigMaps or Secrets change.
-      #
+      # Marks Deployments/StatefulSets/DaemonSets for Stakater Reloader.
+      # @example
       #   use SetReloaderAuto
-      #
       class SetReloaderAuto < Middleware
         KINDS = %w[Deployment StatefulSet DaemonSet].freeze
 

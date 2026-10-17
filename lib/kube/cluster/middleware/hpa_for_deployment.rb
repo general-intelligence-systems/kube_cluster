@@ -6,22 +6,18 @@ require "kube/cluster"
 module Kube
   module Cluster
     class Middleware
-      # Generates a HorizontalPodAutoscaler for every pod-bearing
-      # resource that carries the +app.kubernetes.io/autoscale+ label.
+      # Generates an HPA from the +app.kubernetes.io/autoscale+ label.
       #
-      # The label value encodes the min and max replicas as "min-max":
-      #
+      # @example The label value encodes min-max replicas
       #   metadata.labels = { "app.kubernetes.io/autoscale": "1-5" }
       #
-      # Options:
-      #   cpu:    — target CPU utilization percentage (default: 75)
-      #   memory: — target memory utilization percentage (default: 80)
-      #
+      # @parameter cpu [Integer] target CPU utilization percent (default: 75).
+      # @parameter memory [Integer] target memory utilization percent (default: 80).
+      # @example
       #   stack do
       #     use Middleware::HPAForDeployment
       #     use Middleware::HPAForDeployment, cpu: 60, memory: 70
       #   end
-      #
       class HPAForDeployment < Middleware
         LABEL = :"app.kubernetes.io/autoscale"
 
@@ -32,10 +28,14 @@ module Kube
 
           manifest.resources.each do |resource|
             filter(resource) do
-              next unless resource.pod_bearing?
+              unless resource.pod_bearing?
+                next
+              end
 
               value = resource.label(LABEL)
-              next unless value
+              unless value
+                next
+              end
 
               min, max = parse_range(value)
 
@@ -48,7 +48,9 @@ module Kube
 
               generated << Kube::Cluster["HorizontalPodAutoscaler"].new {
                 metadata.name      = name
-                metadata.namespace = namespace if namespace
+                if namespace
+                  metadata.namespace = namespace
+                end
                 metadata.labels    = labels.reject { |k, _| k == LABEL }
 
                 spec.scaleTargetRef = {
@@ -60,16 +62,16 @@ module Kube
                 spec.maxReplicas = max
                 spec.metrics = [
                   {
-                    type: "Resource",
+                    type:     "Resource",
                     resource: {
-                      name: "cpu",
+                      name:   "cpu",
                       target: { type: "Utilization", averageUtilization: cpu_target },
                     },
                   },
                   {
-                    type: "Resource",
+                    type:     "Resource",
                     resource: {
-                      name: "memory",
+                      name:   "memory",
                       target: { type: "Utilization", averageUtilization: memory_target },
                     },
                   },

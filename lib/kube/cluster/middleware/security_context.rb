@@ -6,33 +6,29 @@ require "kube/cluster"
 module Kube
   module Cluster
     class Middleware
-      # Injects pod and container security contexts on pod-bearing resources.
+      # Injects pod/container security contexts from a profile label.
       #
-      # Reads the +app.kubernetes.io/security+ label. When the label
-      # is absent, the middleware applies the default profile.
-      #
+      # @example Reads +app.kubernetes.io/security+, falling back to the default
       #   Kube::Cluster["Deployment"].new {
       #     metadata.labels = { "app.kubernetes.io/security": "restricted" }
       #     ...
       #   }
       #
-      # Available profiles: +restricted+ (default), +baseline+.
-      #
+      # @example Available profiles are +restricted+ (default) and +baseline+
       #   stack do
       #     use Middleware::SecurityContext                      # default: restricted
       #     use Middleware::SecurityContext, default: :baseline  # change default
       #   end
-      #
       class SecurityContext < Middleware
         LABEL = :"app.kubernetes.io/security"
 
         PROFILES = {
           "restricted" => {
-            pod: {
-              runAsNonRoot: true,
-              runAsUser:    1000,
-              runAsGroup:   1000,
-              fsGroup:      1000,
+            pod:       {
+              runAsNonRoot:   true,
+              runAsUser:      1000,
+              runAsGroup:     1000,
+              fsGroup:        1000,
               seccompProfile: { type: "RuntimeDefault" },
             },
             container: {
@@ -41,8 +37,8 @@ module Kube
               capabilities:             { drop: ["ALL"] },
             },
           },
-          "baseline" => {
-            pod: {
+          "baseline"   => {
+            pod:       {
               runAsNonRoot: true,
               runAsUser:    1000,
               runAsGroup:   1000,
@@ -59,17 +55,22 @@ module Kube
 
           manifest.resources.map! do |resource|
             filter(resource) do
-              next resource unless resource.pod_bearing?
+              unless resource.pod_bearing?
+                next resource
+              end
 
               profile_name = resource.label(LABEL) || default
               profile = PROFILES.fetch(profile_name.to_s) do
-                raise ArgumentError, "Unknown security profile: #{profile_name.inspect}. " \
-                  "Valid profiles: #{PROFILES.keys.join(', ')}"
+                raise ArgumentError,
+                  "Unknown security profile: #{profile_name.inspect}. " \
+                                    "Valid profiles: #{PROFILES.keys.join(', ')}"
               end
 
               h = resource.to_h
               pod_spec = resource.pod_template(h)
-              next resource unless pod_spec
+              unless pod_spec
+                next resource
+              end
 
               pod_spec[:securityContext] = deep_merge(profile[:pod], pod_spec[:securityContext] || {})
 

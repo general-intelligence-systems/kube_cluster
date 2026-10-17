@@ -6,26 +6,18 @@ require "kube/cluster"
 module Kube
   module Cluster
     class Middleware
-      # Reads the +app.kubernetes.io/size+ label from pod-bearing
-      # resources and injects CPU/memory requests and limits into
-      # every container.
+      # Injects CPU/memory from the +app.kubernetes.io/size+ label.
       #
-      # The label on the resource is the input:
-      #
+      # @example
       #   Kube::Cluster["Deployment"].new {
       #     metadata.labels = { "app.kubernetes.io/size": "small" }
       #     ...
       #   }
       #
-      # Register in the stack — no arguments needed:
-      #
+      # @example Registered with no arguments
       #   stack do
       #     use Middleware::ResourcePreset
       #   end
-      #
-      # Available sizes: nano, micro, small, medium, large, xlarge, 2xlarge.
-      # Limits are ~1.5x requests (following Bitnami conventions).
-      #
       class ResourcePreset < Middleware
         LABEL = :"app.kubernetes.io/size"
 
@@ -43,17 +35,24 @@ module Kube
           manifest.resources.map! do |resource|
             filter(resource) do
               size = resource.label(LABEL)
-              next resource unless size
-              next resource unless resource.pod_bearing?
+              unless size
+                next resource
+              end
+              unless resource.pod_bearing?
+                next resource
+              end
 
               preset = PRESETS.fetch(size.to_s) do
-                raise ArgumentError, "Unknown size preset: #{size.inspect}. " \
-                  "Valid sizes: #{PRESETS.keys.join(', ')}"
+                raise ArgumentError,
+                  "Unknown size preset: #{size.inspect}. " \
+                                    "Valid sizes: #{PRESETS.keys.join(', ')}"
               end
 
               h = resource.to_h
               pod_spec = resource.pod_template(h)
-              next resource unless pod_spec
+              unless pod_spec
+                next resource
+              end
 
               resource.each_container(pod_spec) do |container|
                 container[:resources] = deep_merge(preset, container[:resources] || {})

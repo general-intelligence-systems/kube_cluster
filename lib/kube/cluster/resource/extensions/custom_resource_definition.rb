@@ -18,12 +18,16 @@ module Kube
                       versions.find { |v| v.dig(:schema, :openAPIV3Schema) } ||
                       versions.first
 
-            raise ArgumentError, "CRD has no versions" unless version
+            unless version
+              raise ArgumentError, "CRD has no versions"
+            end
 
             version_name = version[:name]
             schema       = version.dig(:schema, :openAPIV3Schema)
 
-            raise ArgumentError, "CRD version #{version_name} has no openAPIV3Schema" unless schema
+            unless schema
+              raise ArgumentError, "CRD version #{version_name} has no openAPIV3Schema"
+            end
 
             {
               kind:        kind,

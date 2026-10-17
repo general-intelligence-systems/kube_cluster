@@ -7,52 +7,54 @@ module Kube
   module Helm
     # Abstracts the differences between Helm chart sources.
     #
-    # Traditional Helm repos require `helm repo add` before charts can be
-    # referenced, and charts are addressed as "repo-name/chart-name".
-    #
-    # OCI registries need no `repo add` step, and charts are addressed as
-    # the full OCI URI: "oci://host/path/chart-name".
-    #
+    # @example Traditional repo: needs `helm repo add` first
     #   endpoint = Kube::Helm::Endpoint.new("https://charts.bitnami.com/bitnami")
     #   endpoint.oci?           #=> false
     #   endpoint.requires_add?  #=> true
     #   endpoint.chart_ref("nginx", repo_name: "bitnami")
     #   #=> "bitnami/nginx"
     #
+    # @example OCI registry: no `repo add` step
     #   endpoint = Kube::Helm::Endpoint.new("oci://ghcr.io/my-org/charts")
     #   endpoint.oci?           #=> true
     #   endpoint.requires_add?  #=> false
     #   endpoint.chart_ref("nginx")
     #   #=> "oci://ghcr.io/my-org/charts/nginx"
-    #
     class Endpoint
       attr_reader :url
 
       def initialize(url)
-        raise ArgumentError, "url must be a String" unless url.is_a?(String)
-        raise ArgumentError, "url must not be empty" if url.strip.empty?
+        unless url.is_a?(String)
+          raise ArgumentError, "url must be a String"
+        end
+        if url.strip.empty?
+          raise ArgumentError, "url must not be empty"
+        end
 
         @url = url.chomp("/")
       end
 
       # Is this an OCI registry endpoint?
+      # @returns [Boolean] true if the URL uses the oci:// scheme.
       def oci?
         @url.start_with?("oci://")
       end
 
-      # Traditional Helm repos require `helm repo add`; OCI registries do not.
+      # Traditional repos require `helm repo add`; OCI ones do not.
+      # @returns [Boolean] true unless this is an OCI endpoint.
       def requires_add?
         !oci?
       end
 
       # Build the chart reference string Helm expects.
       #
-      # For OCI:         "oci://host/path/chart-name"
-      # For traditional: "repo-name/chart-name"
+      # @example
+      #   chart_ref("nginx")                      # OCI:         "oci://host/path/nginx"
+      #   chart_ref("nginx", repo_name: "bitnami") # traditional: "bitnami/nginx"
       #
-      # @param chart_name [String] the chart name (e.g. "nginx")
-      # @param repo_name [String, nil] the local repo alias (required for non-OCI)
-      # @return [String]
+      # @parameter chart_name [String] the chart name, e.g. "nginx".
+      # @parameter repo_name [String, nil] the local repo alias, required for non-OCI.
+      # @returns [String] the chart reference string Helm expects.
       def chart_ref(chart_name, repo_name: nil)
         if oci?
           "#{@url}/#{chart_name}"

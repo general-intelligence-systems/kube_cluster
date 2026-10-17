@@ -23,8 +23,8 @@ module Kube
           snapshot!
         end
 
-        # Data suitable for a strategic-merge patch: only the
-        # keys/sub-trees that differ from the clean snapshot.
+        # Data for a strategic-merge patch: only what changed.
+        # @returns [Hash] the diff between the clean snapshot and now.
         def patch_data
           deep_diff(to_h, @clean)
         end
@@ -57,18 +57,18 @@ module Kube
           def deep_diff(current, original)
             Hash.new.tap do |result|
               merged_keys = current.keys | original.keys
-            
+
               merged_keys.each do |key|
                 cur_val  = current[key]
                 orig_val = original[key]
-            
+
                 if cur_val.is_a?(Hash) && orig_val.is_a?(Hash)
                   nested = deep_diff(cur_val, orig_val)
 
                   if nested.empty?
                     next
                   else
-                    result[key] = nested 
+                    result[key] = nested
                   end
                 elsif cur_val != orig_val
                   result[key] = [orig_val, cur_val]
@@ -83,7 +83,7 @@ module Kube
 
               merged_keys.each do |key|
                 if current[key] != original[key]
-                  keys << key 
+                  keys << key
                 end
               end
             end.to_a

@@ -14,7 +14,6 @@ module Kube
   end
 end
 
-# Make script helpers available inside instance_exec blocks on Hashes.
-# Without this, Hash#method_missing (autovivification) silently swallows
-# calls like ShScript(...) and returns {} instead of an array.
+# Makes script helpers available inside instance_exec blocks on Hashes.
+# Without it, Hash#method_missing (autovivification) swallows the call.
 Hash.include(Kube::Cluster::ScriptCommands)

@@ -5,31 +5,23 @@ require "kube/cluster"
 
 module Kube
   module Cluster
-    # A flat, ordered collection of Kubernetes resources.
+    # A pure collection; middleware applies separately.
     #
-    # Manifest is a pure resource collection. Middleware is applied
-    # separately via Kube::Cluster::Middleware::Stack.
-    #
+    # @example
     #   manifest = Kube::Cluster::Manifest.new
     #   manifest << Kube::Cluster["Deployment"].new { ... }
-    #
     #   stack = Kube::Cluster::Middleware::Stack.new do
     #     use Middleware::SetNamespace, "production"
     #     use Middleware::Labels, app: "web-app"
     #   end
-    #
     #   stack.call(manifest)
     #   manifest.to_yaml
-    #
     class Manifest < Kube::Schema::Manifest
       attr_reader :resources
 
-      # Override << to automatically upgrade Kube::Schema::Resource
-      # instances into Kube::Cluster::Resource instances. This ensures
-      # resources parsed via Kube::Schema::Manifest (e.g. from Helm
-      # charts or downloaded YAML) gain cluster-level methods like
-      # cluster_scoped?, pod_bearing?, and rebuild when composed into
-      # a cluster manifest.
+      # Upgrades a Kube::Schema::Resource to a Kube::Cluster::Resource.
+      # @parameter item [Resource, Manifest, Array] what to append.
+      # @returns [self] appended; gains cluster_scoped?, pod_bearing?, etc.
       def <<(item)
         case item
         when Kube::Cluster::Resource
