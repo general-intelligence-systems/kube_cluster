@@ -5,6 +5,23 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [2.0.0] - 2026-10-17
+
+### Added
+- `require "kube_cluster"` now works as an entry point alongside the existing
+  `require "kube/cluster"`.
+
+### Changed
+- **Breaking:** requires kube_schema `~> 2.0`, which compiles schema
+  definitions lazily, one at a time, on demand, instead of compiling the
+  whole OpenAPI document at boot. `Kube::Cluster[kind].schema` is now a
+  `Kube::Schema::Lazy::Source` rather than a `JSONSchemer::Schema`; it answers
+  the same `#value`/`#valid?`/`#validate`, so call sites that only use those
+  methods need no changes, but code that inspects the schema object's class
+  will need updating.
+
 ## [1.9.1] - 2026-09-28
 
 ### Fixed
