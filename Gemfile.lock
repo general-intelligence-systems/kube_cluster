@@ -283,6 +283,7 @@ DEPENDENCIES
   bake-gem
   bake-modernize
   bake-releases
+  decode
   gem_kit-release (~> 0.3)
   kube_kubectl (~> 2.0)
   kube_schema (~> 2.0)
