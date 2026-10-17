@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "lib/kube/cluster/version"
+require_relative "lib/kube_cluster/version"
 
 Gem::Specification.new do |spec|
   spec.name = "kube_cluster"
@@ -28,6 +28,7 @@ Gem::Specification.new do |spec|
   spec.executables = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
+  spec.add_development_dependency "gem_kit-release", "~> 0.3"
   spec.add_development_dependency "rake", "~> 13.0"
   spec.add_development_dependency "scampi", "~> 1.0"
   spec.add_development_dependency "lefthook", "~> 2.1"

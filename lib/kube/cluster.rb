@@ -5,7 +5,7 @@ require "kube/schema"
 require "active_support/core_ext/string/inflections"
 
 require_relative "../kube/errors"
-require_relative "cluster/version"
+require_relative "../kube_cluster/version"
 require_relative "cluster/script_command"
 require 'kube/ctl'
 require_relative 'helm/repo'

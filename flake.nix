@@ -10,35 +10,35 @@
   outputs = { self, nixpkgs, utils, mine }:
     utils.lib.eachDefaultSystem (system:
       let
-        # No mine.overlays.default: it used to override pkg-config, which stdenv
-        # splices, so the overlay rebuilt stdenv and all of nixpkgs from source.
-        # mine.inputs.nixpkgs.follows makes it redundant anyway.
         pkgs = nixpkgs.legacyPackages.${system};
         lib = mine.lib.${system};
 
-        gems = lib.buildGemset {
-          name = "kube_cluster";
-          src = ./.;
+        gems = pkgs.bundlerEnv {
+          name = "kube_cluster-gems";
+          ruby = pkgs.ruby_3_4;
+          gemfile = ./Gemfile;
+          lockfile = ./Gemfile.lock;
+          gemset = ./gemset.nix;
         };
-
-        kubectlWithKubeconfig = pkgs.writeShellScriptBin "kubectl" ''
-          #!${pkgs.bash}/bin/bash
-          KUBECONFIG="$PWD/kubeconfig.yaml" ${pkgs.kubectl}/bin/kubectl "$@"
-        '';
       in
       {
-        # pkg-config, bundix, libyaml, openssl, overmind, tmux and `bundix -l`
-        # come from mkRubyShell.
         devShells.default = lib.mkRubyShell {
           buildInputs = [
             gems
             gems.wrappedRuby
-            pkgs.trufflehog
-            kubectlWithKubeconfig
+            pkgs.ripgrep # scampi shells out to `rg` to discover __END__ spec sections
           ];
 
-          shellHook = ''
-            export KUBECONFIG="$PWD/kubeconfig.yaml"
+          shellHook = /* bash */ ''
+            unset RUBYOPT
+            export BUNDLE_FORCE_RUBY_PLATFORM=false
+            export BUNDLE_GEMFILE="$PWD/Gemfile"
+            export BUNDLE_FROZEN=false
+
+            export LANG="''${LANG:-C.UTF-8}"
+            export LC_ALL="''${LC_ALL:-$LANG}"
+
+            export RUBYLIB="$PWD/lib''${RUBYLIB:+:$RUBYLIB}"
           '';
         };
       }
